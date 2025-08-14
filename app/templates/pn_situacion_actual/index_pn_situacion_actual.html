@@ -1,0 +1,721 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body %}
+<section class="content">
+    <div class="container-fluid">
+        <!-- Main row -->
+        <div class="row">
+            <!-- Left col -->
+            <section class="col-lg-6 connectedSortable">
+                <!-- Filtros -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="tab-content p-0">
+                            <div class="form-group">
+                                <!-- Form principal -->
+                                <form id="filtroForm">
+                                    <div class="row">
+                                        <!-- Selector de Región (estático) -->
+                                        <div class="col-md-2">
+                                            <div class="form-group">
+                                                <label>REGION :</label>
+                                                <select name="departamento" id="departamento" class="form-control" style="width: 100%;">
+                                                    <option value="JUNIN">JUNIN</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Selector de Provincia con HTMX -->
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <label>PROVINCIA :</label>
+                                                <select
+                                                    id="provincia"
+                                                    name="provincia"
+                                                    class="form-control"
+                                                    style="width: 100%;"
+                                                    hx-get="{% url 'index_situacion_padron' %}?get_distritos=1"
+                                                    hx-trigger="change"
+                                                    hx-target="#distrito"
+                                                    hx-include="#provincia"
+                                                >
+                                                    <option value="">SELECCIONAR</option>
+                                                    {% for provincia in provincias %}
+                                                        <option value="{{ provincia }}">{{ provincia }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <!-- Selector de Distrito (se llena dinámicamente) -->
+                                        <div class="col-md-4">
+                                            <div class="form-group">
+                                                <label>DISTRITO :</label>
+                                                <select
+                                                    id="distrito"
+                                                    name="distrito"
+                                                    class="form-control"
+                                                    style="width: 100%;"
+                                                >
+                                                    <option value="">SELECCIONAR</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <!-- Botón "VER" para disparar la consulta (submit del form) -->
+                                        <div class="col-md-2">
+                                            <div class="form-group">
+                                                <label style="color:white;">VER :</label>
+                                                <button class="btn btn-success col" type="submit">
+                                                    <i class="fa fa-search"></i> VER 
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form> 
+                            </div>
+                        </div>
+                    </div><!-- /.card-body -->
+                </div>
+                <!-- /.card -->
+
+                <!-- EJEMPLO DE TARJETA CON GRÁFICO -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="ion ion-clipboard mr-1"></i>
+                            CANTIDAD DE NIÑOS
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div id="grafico" style="width: 100%; height: 400px;"></div>
+                    </div>
+                </div>
+            </section>
+            <!-- /.Left col -->
+
+            <!-- Right col - Ejemplo de otros gráficos -->
+            <section class="col-lg-3 connectedSortable">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-chart-pie mr-1"></i>
+                            IDENTIFICACION
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div id="grafico_dni" style="width: 100%; height: 200px;"></div>
+                        <div id="grafico_cnv" style="width: 100%; height: 200px;"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="col-lg-3 connectedSortable">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-chart-pie mr-1"></i>
+                            UBICACION
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div id="grafico_direccion_completa" style="width: 100%; height: 180px;"></div>
+                        <div id="grafico_eje_vial" style="width: 100%; height: 180px;"></div>
+                        <div id="grafico_referencia" style="width: 100%; height: 180px;"></div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div class="row">
+            <!-- Right col - Ejemplo de otros gráficos -->
+            <section class="col-lg-6 connectedSortable">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-chart-pie mr-1"></i>
+                            VARIABLES PRIORIZADAS MUNICIPIO
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <!-- Primera fila -->
+                            <div class="col-md-6">
+                                <div id="grafico_visitado" style="width: 100%; height: 150px;"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <div id="grafico_encontrado" style="width: 100%; height: 150px;"></div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <!-- Segunda fila -->
+                            <div class="col-md-6">
+                                <div id="grafico_visitado_no_encontrado" style="width: 100%; height: 150px;"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <div id="grafico_celular" style="width: 100%; height: 150px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="col-lg-6 connectedSortable">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-chart-pie mr-1"></i>
+                            VARIABLES PRIORIZADAS DE SALUD
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <!-- Primera fila -->
+                            <div class="col-md-6">
+                                <div id="grafico_seguro" style="width: 100%; height: 150px;"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <div id="grafico_eess" style="width: 100%; height: 150px;"></div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <!-- Segunda fila -->
+                            <div class="col-md-6">
+                                <div id="grafico_frecuencia" style="width: 100%; height: 150px;"></div>
+                            </div>
+                            <div class="col-md-6">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+    <!-- /.row (main row) -->
+    </div><!-- /.container-fluid -->
+</section>
+
+
+<!-- Incluir la sección de seguimiento nominal desde un partial -->
+{% include "pn_situacion_actual/_seguimiento_nominal.html" %}
+
+
+<!-- Librería ECharts -->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.2/dist/echarts.min.js"></script>
+
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+        const provinciaSelect = document.getElementById('provincia');
+        const distritoSelect = document.getElementById('distrito');
+        const filtroForm = document.getElementById('filtroForm');
+        
+        // Inicializar el gráfico
+        const MyChart = echarts.init(document.getElementById('grafico'));
+        const MyChartPie = echarts.init(document.getElementById('grafico_cnv'));
+        const MyChartDNI = echarts.init(document.getElementById('grafico_dni'));
+        const MyChart_eje_vial = echarts.init(document.getElementById('grafico_eje_vial'));
+        const MyChart_referencia = echarts.init(document.getElementById('grafico_referencia'));
+        const MyChart_visitado = echarts.init(document.getElementById('grafico_visitado'));
+        const MyChart_encontrado = echarts.init(document.getElementById('grafico_encontrado'));
+        const MyChart_celular = echarts.init(document.getElementById('grafico_celular'));
+        const MyChart_seguro = echarts.init(document.getElementById('grafico_seguro'));
+        const MyChart_eess = echarts.init(document.getElementById('grafico_eess'));
+        const MyChart_frecuencia = echarts.init(document.getElementById('grafico_frecuencia'));
+        const MyChart_direccion_completa = echarts.init(document.getElementById('grafico_direccion_completa'));
+        const MyChart_visitado_no_encontrado = echarts.init(document.getElementById('grafico_visitado_no_encontrado'));
+
+        /// Evento de envío del formulario para el gráfico
+        filtroForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+        
+            fetch(`{% url "index_situacion_padron" %}?${new URLSearchParams(formData)}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data); // Verifica los datos recibidos
+                if (data.error) {
+                    console.error('Error:', data.error);
+                    alert('Ocurrió un error al obtener los datos. Por favor, inténtelo de nuevo.');
+                    return;
+                }
+            
+                // Generar gráfico de barras
+                const categories = [
+                    'N28_dias', 'N0a5meses', 'N6a11meses', 'cero_anios', 'un_anios', 
+                    'dos_anios', 'tres_anios', 'cuatro_anios', 'cinco_anios', 'total_den'
+                ];
+            
+                const optionBar = {
+                    tooltip: { trigger: 'axis' },
+                    legend: {
+                        data: ['28 dias', '0 a 5m', '6 a 11m', '0 a 12 m', 'un año', 'dos años', 'tres años', 'cuatro años', 'cinco años', 'total niños'],
+                    },
+                    xAxis: [{
+                        type: 'category',
+                        data: ['28 dias', '0 a 5m', '6 a 11m', '0 a 12 m', 'un año', 'dos años', 'tres años', 'cuatro años', 'cinco años', 'total niños'],  // Asegúrate de que cada categoría esté correctamente distribuida
+                        axisPointer: { type: 'shadow' },
+                        axisLabel: {
+                            interval: 0,  // Mostrar todas las etiquetas
+                            rotate: 45,   // Rotar las etiquetas si es necesario
+                            formatter: function(value) {
+                                return value;  // Mostrar cada categoría en el eje X
+                            }
+                        }
+                    }],
+                    yAxis: [{
+                        type: 'value',
+                        name: 'Cantidad',
+                        min: 0,
+                        axisLabel: { formatter: '{value}' }
+                    }],
+                    series: [{
+                        type: 'bar',
+                        data: [data['N28_dias'][0], data['N0a5meses'][0], data['N6a11meses'][0], data['cero_anios'][0], data['un_anios'][0], data['dos_anios'][0], data['tres_anios'][0], data['cuatro_anios'][0], data['cinco_anios'][0], data['total_den'][0]],  // Asegurarte de que cada categoría tenga su valor
+                        label: {
+                            show: true,  // Mostrar las etiquetas sobre las barras
+                            position: 'top',  // Posicionar las etiquetas arriba de las barras
+                            formatter: '{c}',  // Mostrar el valor de cada barra
+                            fontSize: 12,
+                            fontWeight: 'bold'
+                        },
+                        itemStyle: {
+                            color: function (params) {
+                                const colorMap = {
+                                    '28 dias': '#91cc75',
+                                    '0 a 5m': '#fac858',
+                                    '6 a 11m': '#5470c6',
+                                    '0 a 12 m': '#ee6666',
+                                    'un año': '#73c0de',
+                                    'dos años': '#3ba272',
+                                    'tres años': '#91cc75',
+                                    'cuatro años': '#fac858',
+                                    'cinco años': '#5470c6',
+                                    'total niños': '#87cefa'
+                                };
+                                return colorMap[params.name] || '#000000';  // Asigna el color de acuerdo a la categoría
+                            }
+                        }
+                    }]
+                };
+                
+                MyChart.setOption(optionBar);
+            
+                // Generar gráfico CNV
+                const optionPie = {
+                    tooltip: { 
+                        trigger: 'item',
+                        formatter: function (params) {
+                            // Formatear el tooltip para mostrar la cantidad y la leyenda correctamente
+                            return `${params.name}: ${params.value} (${((params.value / data['total_den'][0]) * 100).toFixed(2)}%)`; 
+                        }
+                    },
+                    series: [{
+                        type: 'pie',
+                        radius: '50%',
+                        data: [
+                            { 
+                                name: `Con CNV: ${data['total_cumple_cnv'][0]}`, 
+                                value: data['total_cumple_cnv'][0],
+                                itemStyle: { color: '#3ba272' } // Color verde
+                            },
+                            { 
+                                name: `Sin CNV: ${data['brecha_cumple_cnv'][0]}`, 
+                                value: data['brecha_cumple_cnv'][0],
+                                itemStyle: { color: '#ee6666' } // Color rojo
+                            },
+                            { 
+                                name: `C: ${((data['cob_cnv'][0] * 100).toFixed(2))}%`, 
+                                value: (data['cob_cnv'][0]),
+                                itemStyle: { color: '#5470c6' } // Color por defecto (azul)
+                            }
+                        ]
+                    }]
+                };
+
+                MyChartPie.setOption(optionPie);
+            
+                // Generar gráfico DNI
+                const optionDNI = {
+                    tooltip: { 
+                        trigger: 'item',
+                        formatter: function (params) {
+                            // Formatear el tooltip para mostrar la cantidad y la leyenda correctamente
+                            return `${params.name}: ${params.value} (${((params.value / data['total_den'][0]) * 100).toFixed(2)}%)`; 
+                        }
+                    },
+                    series: [{
+                        type: 'pie',
+                        radius: '50%',
+                        data: [
+                            { 
+                                name: `Con DNI: ${data['total_cumple_dni'][0]}`, 
+                                value: data['total_cumple_dni'][0],
+                                itemStyle: { color: '#3ba272' } // Color verde
+                            },
+                            { 
+                                name: `Sin DNI: ${data['brecha_cumple_dni'][0]}`, 
+                                value: data['brecha_cumple_dni'][0],
+                                itemStyle: { color: '#ee6666' } // Color rojo
+                            },
+                            { 
+                                name: `C: ${((data['cob_dni'][0] * 100).toFixed(2))}%`, 
+                                value: data['cob_dni'][0],
+                                itemStyle: { color: '#5470c6' } // Color por defecto (azul)
+                            }
+                        ]
+                    }]
+                };
+
+                MyChartDNI.setOption(optionDNI);
+
+                // Generar grafico eje vial
+                const option_eje_vial = {
+                    tooltip: { 
+                        trigger: 'item',
+                        formatter: function (params) {
+                            // Formatear el tooltip para mostrar la cantidad y la leyenda correctamente
+                            return `${params.name}: ${params.value} (${((params.value / data['total_den'][0]) * 100).toFixed(2)}%)`;
+                        }
+                    },
+                    series: [{
+                        type: 'pie',
+                        radius: '50%',
+                        data: [
+                            { 
+                                name: `EJE VIAL: ${data['total_cumple_eje_vial'][0]}`, 
+                                value: data['total_cumple_eje_vial'][0],
+                                itemStyle: { color: '#3ba272' } // Color verde
+                            },
+                            { 
+                                name: `SIN EJE VIAL: ${data['brecha_eje_vial'][0]}`, 
+                                value: data['brecha_eje_vial'][0],
+                                itemStyle: { color: '#ee6666' } // Color rojo
+                            },
+                            { 
+                                name: `C: ${((data['cob_eje_vial'][0] * 100).toFixed(2))}%`, 
+                                value: data['cob_eje_vial'][0],
+                                itemStyle: { color: '#5470c6' } // Color por defecto (azul)
+                            }
+                        ]
+                    }]
+                };
+
+                MyChart_eje_vial.setOption(option_eje_vial);
+
+                // Generar grafico referencia
+                const option_referencia = {
+                    tooltip: { 
+                        trigger: 'item',
+                        formatter: function (params) {
+                            // Formatear el tooltip para mostrar la cantidad y la leyenda correctamente
+                            return `${params.name}: ${params.value} (${((params.value / data['total_den'][0]) * 100).toFixed(2)}%)`; 
+                        }
+                    },
+                    series: [{
+                        type: 'pie',
+                        radius: '50%',
+                        data: [
+                            { 
+                                name: `Con REF: ${data['total_cumple_referencia'][0]}`, 
+                                value: data['total_cumple_referencia'][0],
+                                itemStyle: { color: '#3ba272' } // Color verde
+                            },
+                            { 
+                                name: `Sin REF: ${data['brecha_referencia'][0]}`, 
+                                value: data['brecha_referencia'][0],
+                                itemStyle: { color: '#ee6666' } // Color rojo
+                            },
+                            { 
+                                name: `C: ${((data['cob_referencia'][0] * 100).toFixed(2))}%`, 
+                                value: data['cob_referencia'][0],
+                                itemStyle: { color: '#5470c6' } // Color por defecto (azul)
+                            }
+                        ]
+                    }]
+                };
+
+                MyChart_referencia.setOption(option_referencia);
+
+                // Generar grafico visitado
+                const option_visitado = {
+                    tooltip: { 
+                        trigger: 'item',
+                        formatter: function (params) {
+                            // Formatear el tooltip para mostrar la cantidad y la leyenda correctamente
+                            return `${params.name}: ${params.value} (${((params.value / data['total_den'][0]) * 100).toFixed(2)}%)`; 
+                        }
+                    },
+                    series: [{
+                        type: 'pie',
+                        radius: '50%',
+                        data: [
+                            { 
+                                name: `Con VISITA: ${data['total_cumple_visitado'][0]}`, 
+                                value: data['total_cumple_visitado'][0],
+                                itemStyle: { color: '#3ba272' } // Color verde
+                            },
+                            { 
+                                name: `Sin VISITA: ${data['brecha_visitado'][0]}`, 
+                                value: data['brecha_visitado'][0],
+                                itemStyle: { color: '#ee6666' } // Color rojo
+                            },
+                            { 
+                                name: `C: ${((data['cob_visitado'][0] * 100).toFixed(2))}%`, 
+                                value: data['cob_visitado'][0],
+                                itemStyle: { color: '#5470c6' } // Color por defecto (azul)
+                            }
+                        ]
+                    }]
+                };
+
+                MyChart_visitado.setOption(option_visitado);
+
+                // Generar grafico encontrado
+                const option_encontrado = {
+                    tooltip: { 
+                        trigger: 'item',
+                        formatter: function (params) {
+                            // Formatear el tooltip para mostrar la cantidad y la leyenda correctamente
+                            return `${params.name}: ${params.value} (${((params.value / data['total_den'][0]) * 100).toFixed(2)}%)`; 
+                        }
+                    },
+                    series: [{
+                        type: 'pie',
+                        radius: '50%',
+                        data: [
+                            { 
+                                name: `ENCONTRADO: ${data['total_cumple_encontrado'][0]}`, 
+                                value: data['total_cumple_encontrado'][0],
+                                itemStyle: { color: '#3ba272' } // Color verde
+                            },
+                            { 
+                                name: `No ENCON: ${data['brecha_encontrado'][0]}`, 
+                                value: data['brecha_encontrado'][0],
+                                itemStyle: { color: '#ee6666' } // Color rojo
+                            },
+                            { 
+                                name: `C: ${((data['cob_encontrado'][0] * 100).toFixed(2))}%`, 
+                                value: data['cob_encontrado'][0],
+                                itemStyle: { color: '#5470c6' } // Color por defecto (azul)
+                            }
+                        ]
+                    }]
+                };
+
+                MyChart_encontrado.setOption(option_encontrado);
+
+                // Generar grafico celular
+                const option_celular = {
+                    tooltip: { 
+                        trigger: 'item',
+                        formatter: function (params) {
+                            // Formatear el tooltip para mostrar la cantidad y la leyenda correctamente
+                            return `${params.name}: ${params.value} (${((params.value / data['total_den'][0]) * 100).toFixed(2)}%)`; 
+                        }
+                    },
+                    series: [{
+                        type: 'pie',
+                        radius: '50%',
+                        data: [
+                            { 
+                                name: `CELULAR: ${data['total_cumple_celular'][0]}`, 
+                                value: data['total_cumple_celular'][0],
+                                itemStyle: { color: '#3ba272' } // Color verde
+                            },
+                            { 
+                                name: `Sin CELULAR: ${data['brecha_celular'][0]}`, 
+                                value: data['brecha_celular'][0],
+                                itemStyle: { color: '#ee6666' } // Color rojo
+                            },
+                            { 
+                                name: `C: ${((data['cob_celular'][0] * 100).toFixed(2))}%`, 
+                                value: data['cob_celular'][0],
+                                itemStyle: { color: '#5470c6' } // Color por defecto (azul)
+                            }
+                        ]
+                    }]
+                };
+
+                MyChart_celular.setOption(option_celular);
+
+                // Generar grafico seguro
+                const option_seguro = {
+                    tooltip: { 
+                        trigger: 'item',
+                        formatter: function (params) {
+                            // Formatear el tooltip para mostrar la cantidad y la leyenda correctamente
+                            return `${params.name}: ${params.value} (${((params.value / data['total_den'][0]) * 100).toFixed(2)}%)`; 
+                        }
+                    },
+                    series: [{
+                        type: 'pie',
+                        radius: '50%',
+                        data: [
+                            { 
+                                name: `SEGURO: ${data['total_cumple_seguro'][0]}`, 
+                                value: data['total_cumple_seguro'][0],
+                                itemStyle: { color: '#3ba272' } // Color verde
+                            },
+                            { 
+                                name: `Sin SEGURO: ${data['brecha_seguro'][0]}`, 
+                                value: data['brecha_seguro'][0],
+                                itemStyle: { color: '#ee6666' } // Color rojo
+                            },
+                            { 
+                                name: `C: ${((data['cob_seguro'][0] * 100).toFixed(2))}%`, 
+                                value: data['cob_seguro'][0],
+                                itemStyle: { color: '#5470c6' } // Color por defecto (azul)
+                            }
+                        ]
+                    }]
+                };
+
+                MyChart_seguro.setOption(option_seguro);
+
+                // Generar grafico eess
+                const option_eess = {
+                    tooltip: { 
+                        trigger: 'item',
+                        formatter: function (params) {
+                            // Formatear el tooltip para mostrar la cantidad y la leyenda correctamente
+                            return `${params.name}: ${params.value} (${((params.value / data['total_den'][0]) * 100).toFixed(2)}%)`; 
+                        }
+                    },
+                    series: [{
+                        type: 'pie',
+                        radius: '50%',
+                        data: [
+                            { 
+                                name: `Con EESS: ${data['total_eess'][0]}`, 
+                                value: data['total_eess'][0],
+                                itemStyle: { color: '#3ba272' } // Color verde
+                            },
+                            { 
+                                name: `Sin EESS: ${data['brecha_eess'][0]}`, 
+                                value: data['brecha_eess'][0],
+                                itemStyle: { color: '#ee6666' } // Color rojo
+                            },
+                            { 
+                                name: `C: ${((data['cob_eess'][0] * 100).toFixed(2))}%`, 
+                                value: data['cob_eess'][0],
+                                itemStyle: { color: '#5470c6' } // Color por defecto (azul)
+                            }
+                        ]
+                    }]
+                };
+
+                MyChart_eess.setOption(option_eess);
+
+                // Generar grafico frecuencia
+                const option_frecuencia = {
+                    tooltip: { 
+                        trigger: 'item',
+                        formatter: function (params) {
+                            // Formatear el tooltip para mostrar la cantidad y la leyenda correctamente
+                            return `${params.name}: ${params.value} (${((params.value / data['total_den'][0]) * 100).toFixed(2)}%)`; 
+                        }
+                    },
+                    series: [{
+                        type: 'pie',
+                        radius: '50%',
+                        data: [
+                            { 
+                                name: `FRECUENCIA: ${data['total_frecuencia'][0]}`, 
+                                value: data['total_frecuencia'][0],
+                                itemStyle: { color: '#3ba272' } // Color verde
+                            },
+                            { 
+                                name: `Sin FRECUENCIA: ${data['brecha_frecuencia'][0]}`, 
+                                value: data['brecha_frecuencia'][0],
+                                itemStyle: { color: '#ee6666' } // Color rojo
+                            },
+                            { 
+                                name: `C: ${((data['cob_frecuencia'][0] * 100).toFixed(2))}%`, 
+                                value: data['cob_frecuencia'][0],
+                                itemStyle: { color: '#5470c6' } // Color por defecto (azul)
+                            }
+                        ]
+                    }]
+                };
+
+                MyChart_frecuencia.setOption(option_frecuencia);
+
+                // Generar grafico direccion completa
+                const option_direccion_completa = {
+                    tooltip: { 
+                        trigger: 'item',
+                        formatter: function (params) {
+                            // Formatear el tooltip para mostrar la cantidad y la leyenda correctamente
+                            return `${params.name}: ${params.value} (${((params.value / data['total_den'][0]) * 100).toFixed(2)}%)`; 
+                        }
+                    },
+                    series: [{
+                        type: 'pie',
+                        radius: '50%',
+                        data: [
+                            { 
+                                name: `DIREC COMPL: ${data['total_direccion_completa'][0]}`, 
+                                value: data['total_direccion_completa'][0],
+                                itemStyle: { color: '#3ba272' } // Color verde
+                            },
+                            { 
+                                name: `DIREC INCOM: ${data['brecha_direccion_completa'][0]}`, 
+                                value: data['brecha_direccion_completa'][0],
+                                itemStyle: { color: '#ee6666' } // Color rojo
+                            },
+                            { 
+                                name: `C: ${((data['cob_direccion_completa'][0] * 100).toFixed(2))}%`, 
+                                value: data['cob_direccion_completa'][0],
+                                itemStyle: { color: '#5470c6' } // Color por defecto (azul)
+                            }
+                        ]
+                    }]
+                };
+
+                MyChart_direccion_completa.setOption(option_direccion_completa);
+
+                // Generar grafico visitado no encontrado
+                const option_visitado_no_encontrado = {
+                    tooltip: { 
+                        trigger: 'item',
+                        formatter: function (params) {
+                            // Formatear el tooltip para mostrar la cantidad y la leyenda correctamente
+                            return `${params.name}: ${params.value} (${((params.value / data['total_den'][0]) * 100).toFixed(2)}%)`; 
+                        }
+                    },
+                    series: [{
+                        type: 'pie',
+                        radius: '50%',
+                        data: [
+                            { 
+                                name: `VISIT Y NO ENCON: ${data['total_visitado_no_encontrado'][0]}`, 
+                                value: data['total_visitado_no_encontrado'][0],
+                                itemStyle: { color: '#ee6666' } // Color verde
+                            },
+                            { 
+                                name: `VISIT ENCON: ${data['brecha_visitado_no_encontrado'][0]}`, 
+                                value: data['brecha_visitado_no_encontrado'][0],
+                                itemStyle: { color: '#3ba272' } // Color rojo
+                            }
+                        ]
+                    }]
+                };
+
+                MyChart_visitado_no_encontrado.setOption(option_visitado_no_encontrado);
+
+            })
+            .catch(error => {
+                console.error('Error al obtener los datos:', error);
+            });
+        });
+    });
+
+</script>
+
+
+{% endblock %}

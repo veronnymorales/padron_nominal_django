@@ -1,0 +1,42 @@
+<!-- CABECERA SEGUIMIENTO-->
+<div class="row">
+    <div class="col-md-12">
+        <div class="alert alert-secondary text-center py-3" role="alert">
+            <h4><i class="fa fa-tools"></i> COBERTURAS POR VARIABLES</h4>
+        </div>
+    </div>
+</div>
+<!-- FIN DE CABECERA -->
+
+<!-- SEGUIMIENTO -->
+<div class="row">
+    <div class="col-md-3">
+        <section class="card card-body shadow mb-2">
+            <div hx-target="#content_1" hx-swap="innerHTML" hx-indicator="#loading_1">
+                <ul class="list-group">
+                    <a href="#" class="list-group-item list-group-item-action active">TIPO DE REPORTE</a>
+                    <a href="#" class="list-group-item list-group-item-action"
+                       hx-get="{% url 'sello_get_provincias' 1 %}"
+                       hx-swap="innerHTML"
+                       hx-trigger="click">POR PROVINCIA</a>
+                    <a href="#" class="list-group-item list-group-item-action"
+                       hx-get="{% url 'sello_get_distritos' 1 %}"
+                       hx-swap="innerHTML"
+                       hx-trigger="click">POR DISTRITO</a>
+                </ul>
+            </div>
+        </section>
+    </div>
+
+    <div class="col-md-9">
+        <div id="loading_1" style="display:none;">Cargando...
+            <section class="card card-body shadow mb-2">
+            </section>
+        </div>
+        <div id="content_1">
+            <section class="card card-body shadow mb-2">
+            </section>
+        </div>
+    </div>
+</div>
+<!-- FIN DE SEGUIMIENTO -->

@@ -1,0 +1,195 @@
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('chart_red_ranking');
+    const filtroForm = document.querySelector('form');
+
+    function loadRankingData(params = {}) {
+        const queryString = new URLSearchParams(params).toString();
+        fetch(`{% url "index_pn_poblacion" %}?${queryString}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error en la respuesta del servidor');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Datos recibidos:', data);
+
+            if (!container) {
+                console.error('El elemento contenedor "chart_red_ranking" no fue encontrado.');
+                return;
+            }
+            var myChart = echarts.init(container);
+
+            // Crear un array de objetos con todos los datos relacionados
+            const datosCompletos = data.r_red.map((red, index) => ({
+                red: red,
+                denominador: data.r_denominador[index],
+                numerador: data.r_numerador[index],
+                cobertura: data.r_cobertura[index]
+            }));
+
+            // Ordenar los datos por cobertura de mayor a menor
+            datosCompletos.sort((a, b) => b.cobertura - a.cobertura);
+    
+            // Separar los datos ordenados en arrays individuales
+            const redes = datosCompletos.map(d => d.red);
+            const denominadores = datosCompletos.map(d => d.denominador);
+            const numeradores = datosCompletos.map(d => d.numerador);
+            const coberturas = datosCompletos.map(d => d.cobertura);
+    
+            var option = {
+                title: {
+                    text: ''
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    },
+                    formatter: function(params) {
+                        let result = params[0].name + '<br/>';
+                        params.forEach(function(item) {
+                            if (item.seriesName === 'Avance') {
+                                result += item.marker + ' ' + item.seriesName + ': ' + parseFloat(item.value).toFixed(2) + '%<br/>';
+                            } else {
+                                result += item.marker + ' ' + item.seriesName + ': ' + item.value + '<br/>';
+                            }
+                        });
+                        return result;
+                    }
+                },
+                legend: {
+                    data: ['Poblacion', 'PN', 'Cob']
+                },
+                xAxis: [{
+                    type: 'category',
+                    data: redes, // Eje X: Redes de salud
+                    axisPointer: {
+                        type: 'shadow'
+                    },
+                    axisLabel: {
+                        rotate: 45,
+                        interval: 0,
+                        fontSize: 9
+                    }
+                }],
+                yAxis: [
+                    {
+                        type: 'value',
+                        name: 'Cantidad',
+                        min: 0,
+                        axisLabel: {
+                            formatter: '{value}'
+                        }
+                    },
+                    {
+                        type: 'value',
+                        name: 'Cobertura (%)',
+                        min: 0,
+                        max: 100,
+                        interval: 20,
+                        axisLabel: {
+                            formatter: '{value}%'
+                        }
+                    }
+                ],
+                series: [
+                    {
+                        name: 'Poblacion',
+                        type: 'bar',
+                        data: denominadores,
+                        label: {
+                            show: true,
+                            position: 'top',
+                            formatter: '{c}',
+                            fontSize: 10,
+                        },
+                        itemStyle: {
+                            color: '#91cc75'
+                        }
+                    },
+                    {
+                        name: 'PN',
+                        type: 'bar',
+                        data: numeradores,
+                        label: {
+                            show: true,
+                            position: 'top',
+                            formatter: '{c}',
+                            fontSize: 10,
+                        },
+                        itemStyle: {
+                            color: '#fac858'
+                        }
+                    },
+                    {
+                        name: 'Cob',
+                        type: 'line',
+                        yAxisIndex: 1,
+                        data: coberturas, // Eje Y: Cobertura
+                        itemStyle: {
+                            color: '#5470c6'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top',
+                            formatter: function(params) {
+                                return parseFloat(params.value).toFixed(2) + '%';
+                            },
+                            fontSize: 10,
+                            fontWeight: 'bold'
+                        },
+                        markLine: {
+                            symbol: 'none',
+                            lineStyle: {
+                                type: 'dashed',
+                                color: 'red'
+                            },
+                            data: [
+                                {
+                                    yAxis: 85,
+                                    name: 'Meta'
+                                }
+                            ],
+                            label: {
+                                show: true,
+                                formatter: 'Meta: 85%',
+                                position: 'end'
+                            }
+                        }
+                    }
+                ]
+            };
+            myChart.setOption(option);
+        })
+        .catch(error => {
+            console.error('Error al cargar los datos:', error);
+            if (container) {
+                container.innerHTML = '<p class="text-center text-danger">Ocurrió un error al cargar los datos.</p>';
+            }
+        });
+    }
+
+    if (filtroForm) {
+        filtroForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(filtroForm);
+            const params = {};
+            for (const [key, value] of formData.entries()) {
+                if (value) {
+                    params[key] = value;
+                }
+            }
+            loadRankingData(params);
+        });
+
+        filtroForm.dispatchEvent(new Event('submit'));
+        
+    } else {
+        loadRankingData();
+    }
+});
+</script>

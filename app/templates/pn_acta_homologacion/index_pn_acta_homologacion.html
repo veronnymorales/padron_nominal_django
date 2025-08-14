@@ -1,0 +1,800 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body %}
+<style>
+    /* General styles for dates */
+    .matrix-table td {
+        padding: 5px;
+        text-align: center;
+    }
+
+    /* Green background for dates */
+    .matrix-table .date-cell {
+        background-color: #dff0d8;
+        color: #3c763d;
+        font-weight: bold;
+    }
+
+    /* Red background for empty March values */
+    .matrix-table .empty-march {
+        background-color: #f2dede;
+        color: #a94442;
+    }
+
+    /* Alert label for municipalities with empty March */
+    .matrix-table .alert-label {
+        color: #a94442;
+        font-weight: bold;
+        margin-left: 10px;
+    }
+
+    /* Primera columna (Distrito/Municipio) ancho fijo y alineado a la izquierda */
+    .matrix-table th.municipality-name-col,
+    .matrix-table td.municipio-name-col {
+        min-width: 240px;
+        max-width: 360px;
+        width: 360px;
+        text-align: left;
+        background: #f8f9fa;
+        font-weight: bold;
+    }
+
+    /* Columnas de meses: ancho fijo igual para todas */
+    .matrix-table th:not(.municipality-name-col),
+    .matrix-table td:not(.municipio-name-col) {
+        min-width: 100px;
+        max-width: 120px;
+        width: 100px;
+        text-align: center;
+        vertical-align: middle;
+        word-break: break-word;
+    }
+
+    .alert-icon {
+        font-size: 0.8em;
+        padding: 3px 6px;
+        margin-left: 8px;
+        border-radius: 4px;
+    }
+
+    #chart_regional_mensual {
+        width: 100%;
+        height: 280px;
+        max-width: 1300px;
+        margin: 0 auto;
+    }
+
+    .text-danger { color: #dc3545 !important; }
+    .text-warning { color: #ffc107 !important; }
+    .text-success { color: #28a745 !important; }
+    .font-weight-bold { font-weight: bold; }
+    .badge-danger { background: #dc3545 !important; color: #fff; }
+    .badge-warning { background: #ffc107 !important; color: #212529; }
+    .badge-success { background: #28a745 !important; color: #fff; }
+
+    /* DataTables compact styles */
+    .dt-small,
+    #ranking-table td, #ranking-table th,
+    #detalle-tabla td, #detalle-tabla th {
+        font-size: 12px !important;
+        padding: 4px 6px !important;
+    }
+
+    #ranking-container {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    #ranking-table {
+        width: 100% !important;
+        table-layout: auto !important;
+        margin-bottom: 0 !important;
+    }
+    /* Reducir ancho de columnas Provincia y Distrito en ranking-table */
+    #ranking-table th, #ranking-table td {
+        white-space: nowrap;
+        vertical-align: middle;
+        font-size: 12px !important;
+        padding: 4px 6px !important;
+    }
+    
+    #ranking-table th:nth-child(1),
+    #ranking-table td:nth-child(1),
+    #ranking-table th:nth-child(2),
+    #ranking-table td:nth-child(2) {
+        min-width: 60px;
+        max-width: 110px;
+        width: 90px;
+    }
+    
+    #ranking-table th,
+    #ranking-table td {
+        text-align: center;
+    }
+    
+    .card .card-body {
+        padding: 1rem 1rem 0.5rem 1rem;
+
+    /* Ajustar el pie de página de DataTables para que no esté separado */
+    .dataTables_wrapper .dataTables_paginate {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+    }
+    .dataTables_wrapper .dataTables_info {
+        padding-bottom: 0 !important;
+        margin-bottom: 0 !important;
+    }
+
+    /* Responsivo: tabla desplazable horizontal en pantallas pequeñas */
+    @media (max-width: 991.98px) {
+        #matrix-container {
+            overflow-x: auto;
+        }
+        .matrix-table {
+            width: 1200px;
+            min-width: 900px;
+        }
+        .matrix-table th.municipality-name-col,
+        .matrix-table td.municipio-name-col {
+            min-width: 120px;
+            max-width: 180px;
+            width: 140px;
+        }
+        .matrix-table th:not(.municipality-name-col),
+        .matrix-table td:not(.municipio-name-col) {
+            min-width: 60px;
+            max-width: 70px;
+            width: 65px;
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        .matrix-table th,
+        .matrix-table td {
+            min-width: 50px;
+            font-size: 12px;
+            padding: 2px;
+        }
+        .matrix-table th.municipality-name-col,
+        .matrix-table td.municipio-name-col {
+            min-width: 80px;
+            font-size: 12px;
+        }
+        .matrix-table th:not(.municipality-name-col),
+        .matrix-table td:not(.municipio-name-col) {
+            min-width: 40px;
+            width: 45px;
+        }
+    }
+</style>
+
+
+<section class="content">
+    <div class="container-fluid">
+        <!-- ADD: summary cards + monthly chart row -->
+        <div class="row mb-4">
+            <!-- Card 1: Actas Subidas -->
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-info">
+                    <div class="inner">
+                        <h3 id="total-actas">86 / 124</h3>
+                        <p>Actas Subidas (Junio)</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                </div>
+            </div>
+            <!-- Card 2: Porcentaje de Avance -->
+            <div class="col-lg-3 col-6">
+                <div class="small-box bg-success">
+                    <div class="inner">
+                        <h3 id="global-progress">69.3<sup style="font-size:20px">%</sup></h3>
+                        <p>Porcentaje de Avance (Junio)</p>
+                    </div>
+                    <div class="icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- /ADD -->
+
+        <!-- Grafico Mensual-->   
+        <div class="row">
+            <section class="col-lg-12 connectedSortable">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Grafico Municipios y Actas por Mes</h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <button type="button" class="btn btn-tool" data-card-widget="maximize">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="container">
+                            <div id="chart_regional_mensual"></div>
+                        </div>  
+                    </div>
+                </div>  
+            </section>
+        </div>
+        <!-- Matriz  -->
+        <div class="row">
+            <section class="col-lg-12 connectedSortable">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Municipios detallado por Mes</h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <button type="button" class="btn btn-tool" data-card-widget="maximize">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="row">
+                            <!-- Columna izquierda: Filtros -->
+                            <div class="col-md-4 filter-container"><!-- ADD: matrix-specific municipio filter -->
+                                <label>Buscar Provincia:</label>
+                                <select name="provincia" id="provincia" class="form-control">
+                                    <option value="">SELECCIONAR</option>
+                                    {% for provincia in provincias %}
+                                        <option value="{{ provincia }}">{{ provincia }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <select name="distrito" id="distrito" class="form-control"  style="display: none;">
+                                <option value="">SELECCIONAR</option>
+                                <!-- Opciones de distrito aquí -->
+                            </select>
+
+                            <select name="departamento" id="departamento" class="form-control"  style="display: none;">
+                                <option value="">SELECCIONAR</option>
+                                <!-- Opciones de distrito aquí -->
+                            </select>
+                        </div>
+                    </br>
+                        <div class="row">
+                            <div class="col-12 d-flex justify-content-left">
+                                <div id="matrix-container">
+                                    <table class="table table-bordered table-striped matrix-table" id="matrix-table">
+                                        <thead>
+                                            <tr>
+                                                <th class="municipality-name-col">Municipio</th>
+                                                <th>Ene</th>
+                                                <th>Feb</th>
+                                                <th>Mar</th>
+                                                <th>Abr</th>
+                                                <th>May</th>
+                                                <th>Jun</th>
+                                                <th>Jul</th>
+                                                <th>Ago</th>
+                                                <th>Sep</th>
+                                                <th>Oct</th>
+                                                <th>Nov</th>
+                                                <th>Dic</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="matrix-body">
+                                        
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div><!-- /.card-body -->
+                        </div>
+                    </div>
+
+                    <div class="card-footer">
+                        <div class="text-muted small">
+                            <i class="fas fa-info-circle"></i> Las celdas muestran la fecha de la última subida de acta en el mes correspondiente.
+                        </div>
+                    </div>
+                </div><!-- Right col - Ejemplo de otros gráficos -->
+            </section>
+        </div>
+        <!-- Ranking -->
+        <div class="row">
+            <!-- Primera columna - Tabla de Ranking de Municipios -->
+            <section class="col-lg-5 connectedSortable">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Ranking de Municipios</h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <button type="button" class="btn btn-tool" data-card-widget="maximize">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                        </div>
+                    </div>
+                
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-12 d-flex justify-content-left">
+                                <div id="ranking-container">
+                                    <table class="table table-bordered table-striped ranking-table" id="ranking-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Provincia</th>
+                                                <th>Distrito</th>
+                                                <th>Meta</th>
+                                                <th>Avance</th>
+                                                <th>% Por</th>
+                                                <th>Estado</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="ranking-body">
+                                        
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div><!-- /.card-body -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Segunda columna - Tabla de detalle -->
+            <section class="col-lg-7 connectedSortable">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Tabla detallado de Actas de Homologacion</h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <button type="button" class="btn btn-tool" data-card-widget="maximize">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                        </div>
+                    </div>
+                
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-12 d-flex justify-content-left">
+                                <!-- Contenido para la nueva tabla -->
+                                <div id="detalle-tabla-container">
+                                    <table class="table table-bordered table-striped" id="detalle-tabla">
+                                        <thead>
+                                            <tr>
+                                                <!-- Encabezados para la nueva tabla -->
+                                                <th>Provincia</th>
+                                                <th>Distrito</th>
+                                                <th>Municipio</th>
+                                                <th>Mes</th>
+                                                <th>Fecha Inicial</th>
+                                                <th>Fecha Final</th>
+                                                <th>Fecha Envio</th>
+                                                <th>DNI</th>
+                                                <th>Ape Paterno</th>
+                                                <th>Ape Materno</th>
+                                                <th>Nombres</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="detalle-body">
+                                            <!-- Contenido de la nueva tabla -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div><!-- /.container-fluid -->
+</section>
+
+<!-- Librería ECharts -->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.2/dist/echarts.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css"/>
+<script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+
+<script type="text/javascript">
+    // MATRIZ 
+    document.addEventListener('DOMContentLoaded', function() {
+        function loadMatrixData() {
+            const provincia = document.getElementById('provincia').value;
+            const departamento = document.getElementById('departamento').value;
+            const distrito = document.getElementById('distrito').value;
+            
+            const params = new URLSearchParams({
+                provincia: provincia,
+                departamento: departamento,
+                distrito: distrito
+            });
+            
+            fetch(`{% url "index_acta_padron" %}?${params.toString()}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Error en la respuesta');
+                return response.json();
+            })
+            .then(data => {
+                const tbody = document.getElementById('matrix-body');
+                tbody.innerHTML = '';
+                
+                // Verificar si hay datos
+                if (data.municipio && data.municipio.length > 0) {
+                    data.municipio.forEach((municipio, index) => {
+                        const row = document.createElement('tr');
+                        
+                        // Municipio column with alert label
+                        let municipioCell = `<td class="municipio-name-col">${municipio}`;
+                        const marchValue = data.mes_junio?.[index] || '-';
+                        if (marchValue === '-') {
+                            municipioCell += '    <span class="fas fa-exclamation-circle alert-icon badge bg-danger">  ¡Alerta!</span>';
+                        }
+                        municipioCell += '</td>';
+
+                        row.innerHTML = municipioCell;
+                        
+                        const meses = ['mes_enero', 'mes_febrero', 'mes_marzo',
+                                        'mes_abril', 'mes_mayo', 'mes_junio',
+                                        'mes_julio', 'mes_agosto', 'mes_septiembre',
+                                        'mes_octubre', 'mes_noviembre', 'mes_diciembre'];
+                        meses.forEach((mes, mesIndex) => {
+                            let valor = data[mes]?.[index] || '-';
+                            let cellClass = '';
+                            let formattedValor = valor;
+                        
+                            // Formatear fecha solo si hay valor
+                            if (valor !== '-' && valor !== 'None') {
+                                // Convertir a formato dd/mm/yyyy
+                                const [fechaParte] = valor.split(' ');  // Dividir fecha y hora
+                                const [anio, mesFecha, dia] = fechaParte.split('-');
+                                formattedValor = `${dia}/${mesFecha}/${anio}`;
+                                
+                                // Aplicar clase para texto verde
+                                cellClass = 'date-cell';
+                            }
+                        
+                            // Resaltar marzo vacío
+                            if (mes === 'mes_junio' && valor === '-') {
+                                cellClass = 'empty-march';
+                            }
+                        
+                            row.innerHTML += `<td class="${cellClass}">${formattedValor}</td>`;
+                        });
+                        tbody.appendChild(row);
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="13">No se encontraron datos</td></tr>';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('matrix-body').innerHTML = 
+                    '<tr><td colspan="13">Error al cargar los datos</td></tr>';
+            });
+        }        
+        // Carga inicial
+        loadMatrixData();
+
+        // Filtrar tabla al cambiar provincia
+        document.getElementById('provincia').addEventListener('change', function() {
+            loadMatrixData();
+        });
+        // Si quieres que también filtre por departamento y distrito:
+        document.getElementById('departamento').addEventListener('change', function() {
+            loadMatrixData();
+        });
+        document.getElementById('distrito').addEventListener('change', function() {
+            loadMatrixData();
+        });
+    });
+
+    // AVANCE MENSUAL
+    document.addEventListener('DOMContentLoaded', function () {
+        // Valor máximo en el eje Y (por ejemplo 80%)
+        const maxValue = 100; 
+        // Meta (por ejemplo 70%)
+        const meta = 80;
+        // Función para cargar datos AJAX enviando el año
+        function cargarDatosMensual() {
+            fetch(`{% url "index_acta_padron" %}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (!data || data.error) {
+                    console.error('Error en los datos recibidos:', data?.error || 'Respuesta vacía');
+                    return;
+                }
+    
+                // Inicializar arrays vacíos
+                const monthlyNum = [];
+                const monthlyDen = [];
+                const monthlyCob = [];
+    
+                // Validar y llenar arrays con los datos recibidos
+                for (let i = 1; i <= 12; i++) {
+                    monthlyNum.push((data[`num_${i}`] && data[`num_${i}`][0]) ? data[`num_${i}`][0] : 0);
+                    monthlyDen.push((data[`den_${i}`] && data[`den_${i}`][0]) ? data[`den_${i}`][0] : 0);
+                    monthlyCob.push((data[`cob_${i}`] && data[`cob_${i}`][0]) ? data[`cob_${i}`][0] : 0);
+                }
+    
+                // Referencia al contenedor del gráfico
+                const chartContainerMensual = document.getElementById('chart_regional_mensual');
+                if (chartContainerMensual) {
+                    const myChartRegionalMensual = echarts.init(chartContainerMensual);
+                    const months = ['ENE','FEB','MAR','ABR','MAY','JUN',
+                                    'JUL','AGO','SET','OCT','NOV','DIC'];
+    
+                    const option = {
+                        title: {
+                            text: `Avance Regional Mensual`,
+                            left: 'center'
+                        },
+                        tooltip: {
+                            trigger: 'axis',
+                            formatter: function (params) {
+                                const idx = params[0].dataIndex;
+                                const monthName = params[0].name;
+                                const num = monthlyNum[idx] ?? 0;
+                                const den = monthlyDen[idx] ?? 0;
+                                const cob = monthlyCob[idx] ?? 0;
+    
+                                return `
+                                    <strong>${monthName}</strong><br/>
+                                    Den: ${den}<br/>
+                                    Num: ${num}<br/>
+                                    Cob: ${cob.toFixed(1)}%
+                                `;
+                            }
+                        },
+                        legend: {
+                            data: ['% Avance'],
+                            left: 'left'
+                        },
+                        grid: {
+                            left: '3%',
+                            right: '4%',
+                            bottom: '3%',
+                            containLabel: true
+                        },
+                        toolbox: {
+                            feature: {
+                                saveAsImage: {}
+                            }
+                        },
+                        xAxis: {
+                            type: 'category',
+                            data: months
+                        },
+                        yAxis: {
+                            type: 'value',
+                            max: maxValue,
+                            axisLabel: {
+                                formatter: '{value}%'
+                            }
+                        },
+                        series: [
+                            {
+                                name: '% Avance',
+                                type: 'bar',
+                                step: 'start',
+                                data: monthlyCob,
+                                areaStyle: {},
+                                label: {
+                                    show: true,
+                                    position: 'top',
+                                    formatter: function(params) {
+                                        return params.value.toFixed(1) + '%';
+                                    }
+                                },
+                                markLine: {
+                                    symbol: 'none',
+                                    lineStyle: {
+                                        type: 'dash',
+                                        color: 'red'
+                                    },
+                                    data: [
+                                        { yAxis: meta, name: 'M' }
+                                    ],
+                                    label: {
+                                        show: true,
+                                        formatter: `M: ${meta}%`,
+                                        position: 'end',
+                                        offset: [0, -14]
+                                    }
+                                }
+                            }
+                        ]
+                    };
+                    
+                    // Justo antes de renderizar el gráfico:
+                    console.log("monthlyCob:", monthlyCob, "monthlyNum:", monthlyNum, "monthlyDen:", monthlyDen);
+                    
+                    if (
+                        monthlyCob.length !== 12 ||
+                        monthlyCob.some(v => isNaN(Number(v)))
+                    ) {
+                        chartContainerMensual.innerHTML = '<div class="text-danger">No hay datos válidos para mostrar el gráfico.</div>';
+                        return;
+                    }
+                    // Renderizar gráfica
+                    myChartRegionalMensual.setOption(option);
+                } else {
+                    console.error('El contenedor para el gráfico (chart_regional_mensual) no existe');
+                }
+            })
+            .catch(error => {
+                console.error('Error al obtener los datos:', error.message);
+            });
+        }
+        // Cargar por defecto (por ejemplo, año 2024)
+        cargarDatosMensual();
+    });
+
+    // RANKING
+    document.addEventListener('DOMContentLoaded', function() {
+        const datosTable = document.getElementById('ranking-body');
+        function loadRankingData() {
+            fetch(`{% url "index_acta_padron" %}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Error en la respuesta');
+                return response.json();
+            })
+            .then(data => {
+                // Validación de datos
+                if (data.provincia_ranking && data.provincia_ranking.length > 0) {
+                    let tableContent = '';
+                    data.provincia_ranking.forEach((provincia, index) => {
+                        // Determinar color según estado
+                        let estado = data.estado_ranking[index];
+                        let avance = data.avance_ranking[index];
+                        let estadoClass = '';
+                        let avanceClass = '';
+                    
+                        if (estado === 'RIESGO') {
+                            estadoClass = 'badge badge-danger';
+                            avanceClass = 'text-danger font-weight-bold';
+                        } else if (estado === 'PROCESO') {
+                            estadoClass = 'badge badge-warning';
+                            avanceClass = 'text-warning font-weight-bold';
+                        } else {
+                            estadoClass = 'badge badge-success';
+                            avanceClass = 'text-success font-weight-bold';
+                        }
+                    
+                        tableContent += `
+                            <tr>
+                                <td style="font-size: 14px;">${data.provincia_ranking[index]}</td>
+                                <td style="font-size: 14px;">${data.distrito_ranking[index]}</td>
+                                <td class="text-center" style="font-size: 14px;">${data.den_ranking[index]}</td>
+                                <td class="text-center" style="font-size: 14px;">${data.num_ranking[index]}</td>
+                                <td class="text-center ${avanceClass}" style="font-size: 14px; font-weight: bold;">${avance}%</td>
+                                <td class="text-center"><span class="${estadoClass}" style="font-size: 14px;">${estado}</span></td>
+                            </tr>
+                        `;
+                    });
+                    datosTable.innerHTML = tableContent;
+
+                    // Inicializar DataTable (destruir si ya existe)
+                    if ($.fn.DataTable.isDataTable('#ranking-table')) {
+                        $('#ranking-table').DataTable().destroy();
+                    }
+                    $('#ranking-table').DataTable({
+                        pageLength: 10,
+                        lengthChange: false,
+                        searching: true,
+                        ordering: true,
+                        info: false,
+                        autoWidth: false,
+                        language: {
+                            url: 'https://cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json'
+                        }
+                    });
+                } else {
+                    datosTable.innerHTML = '<tr><td colspan="6">No hay datos de ranking</td></tr>';
+                }
+            })
+            .catch(error => {
+                console.error('Error al cargar el ranking:', error.message);
+                datosTable.innerHTML = '<tr><td colspan="6">Error al cargar el ranking</td></tr>';
+            });
+        }
+    
+        // ¡Llama la función aquí!
+        loadRankingData();
+    });
+
+    // DETALLE ACTA
+    document.addEventListener('DOMContentLoaded', function() {
+        const datosTableDetalle = document.getElementById('detalle-body');
+        function loadDetalleData() {
+            fetch(`{% url "index_acta_padron" %}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Error en la respuesta');
+                return response.json();
+            })
+            .then(data => {
+                // Validación de datos
+                if (data.provincia_detalle && data.provincia_detalle.length > 0) {
+                    let tableContentDetalle = '';
+                    data.provincia_detalle.forEach((provincia, index) => {
+                        // Formatear fechas a dd/mm/aaaa
+                        function formatFecha(fechaStr) {
+                            if (!fechaStr || fechaStr === 'None') return '';
+                            const [fechaParte] = fechaStr.split(' ');
+                            const [anio, mes, dia] = fechaParte.split('-');
+                            return `${dia}/${mes}/${anio}`;
+                        }
+                        const fechaInicial = formatFecha(data.fecha_inicial_detalle[index]);
+                        const fechaFinal = formatFecha(data.fecha_final_detalle[index]);
+                        const fechaEnvio = formatFecha(data.fecha_envio_detalle[index]);
+                        
+                        tableContentDetalle += `
+                            <tr>
+                                <td style="font-size: 14px;">${data.provincia_detalle[index]}</td>
+                                <td style="font-size: 14px;">${data.distrito_detalle[index]}</td>
+                                <td class="text-center" style="font-size: 14px;">${data.municipio_detalle[index]}</td>
+                                <td class="text-center" style="font-size: 14px;">${data.mes_detalle[index]}</td>
+                                <td class="text-center" style="font-size: 14px;">${fechaInicial}</td>
+                                <td class="text-center" style="font-size: 14px;">${fechaFinal}</td>
+                                <td class="text-center" style="font-size: 14px;">${fechaEnvio}</td>
+                                <td class="text-center" style="font-size: 14px;">${data.dni_detalle[index]}</td>
+                                <td class="text-center" style="font-size: 14px;">${data.primer_apellido_detalle[index]}</td>
+                                <td class="text-center" style="font-size: 14px;">${data.segundo_apellido_detalle[index]}</td>
+                                <td class="text-center" style="font-size: 14px;">${data.nombres_detalle[index]}</td>
+                            </tr>
+                        `;
+                    });
+                    datosTableDetalle.innerHTML = tableContentDetalle;
+
+                    // Inicializar DataTable (destruir si ya existe)
+                    if ($.fn.DataTable.isDataTable('#detalle-tabla')) {
+                        $('#detalle-tabla').DataTable().destroy();
+                    }
+                    $('#detalle-tabla').DataTable({
+                        pageLength: 10,
+                        lengthChange: false,
+                        searching: true,
+                        ordering: true,
+                        info: false,
+                        autoWidth: false,
+                        language: {
+                            url: 'https://cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json'
+                        }
+                    });
+                } else {
+                    datosTableDetalle.innerHTML = '<tr><td colspan="11">No hay datos en los detalles</td></tr>';
+                }
+            })
+            .catch(error => {
+                console.error('Error al cargar el detalle de actas:', error.message);
+                datosTableDetalle.innerHTML = '<tr><td colspan="11">Error al cargar el detalle</td></tr>';
+            });
+        }
+    
+        // ¡Llama la función aquí!
+        loadDetalleData();
+        
+    });
+
+</script>
+
+{% endblock %}

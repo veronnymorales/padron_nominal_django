@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block header %}
+<div class="col-sm-6">
+    <h1 class="m-0">Reporte Operacional</h1>
+  </div><!-- /.col -->
+  <div class="col-sm-6">
+    <ol class="breadcrumb float-sm-right">
+      <li class="breadcrumb-item"><a href="#"></a></li>
+    </ol>
+  </div><!-- /.col -->
+{% endblock %}
+
+{% block body %}
+{% if matriz %}
+<table>
+  <thead>
+    <tr>
+      <th>renaes</th>
+      <th>periodo</th>
+      <th>ubigeo</th>
+      <th>dis_1</th>
+      <th>dis_2</th>
+      <th>dis_3</th>
+      <th>dis_4</th>
+      <th>dis_5</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for obj in matriz %}
+      <tr>
+        <td>{{ obj.renaes }}</td>
+        <td>{{ obj.periodo }}</td>
+        <td>{{ obj.ubigeo }}</td>
+        <td>{{ obj.dis_1 }}</td>
+        <td>{{ obj.dis_2 }}</td>
+        <td>{{ obj.dis_3 }}</td>
+        <td>{{ obj.dis_4 }}</td>
+        <td>{{ obj.dis_5 }}</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>No hay datos disponibles.</p>
+{% endif %}
+
+{% endblock %}

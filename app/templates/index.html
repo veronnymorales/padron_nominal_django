@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% load static %}
+{% block body %}
+
+<!-- dashboard.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard de Niños</title>
+
+</body>
+</html>
+
+<div class="row">
+    <h5>ESTADO SITUACIONAL - REPORTE GERENCIAL</h5>    
+</div>
+
+
+<div class="row">
+    <!-- RANKING -->
+    <div class="col-md-6">
+        <div class="card card-success">
+            <div class="card-body">
+                <div class="form-group">
+                    <div class="row">
+                        <!-- Sección para seleccionar el mes -->
+                        <div class="col-md-3 mb-2">
+                            <select class="form-control" id="anio-select">
+                                <option value = '2025' selected="true">PROVINCIA</option>
+                                <!-- Agrega más opciones de meses según sea necesario -->
+                            </select>
+                        </div>
+                        <!-- Sección para seleccionar el mes -->
+                        <div class="col-md-3 mb-2">
+                            <select class="form-control" id="mes-select">
+                                <option value = '1' selected="true">DISTRITO</option>
+                            </select>
+                        </div>
+                        <!-- Sección para seleccionar el mes -->
+                        <div class="col-md-3 mb-2">
+                            <select class="form-control" id="mes-select">
+                                <option value = '' selected="true">EDAD</option>
+                                <option value = '0'>MENORES 1 AÑO</option>
+                                <option value = '1'>1 AÑO</option>
+                                <option value = '2'>2 AÑOS</option>
+                                <option value = '3'>3 AÑOS</option>
+                                <option value = '4'>4 AÑOS</option>
+                                <option value = '5'>5 AÑOS</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-3 mb-2">
+                            <!-- Botón para obtener los datos -->
+                            <button class="btn btn-success" id="obtener-datos"><i class="fas fa-eye"></i>  Obtener datos</button>
+                        </div>
+                    </div>
+                </div> 
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

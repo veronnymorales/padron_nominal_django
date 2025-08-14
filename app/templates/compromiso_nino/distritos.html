@@ -1,0 +1,91 @@
+<main class="container">
+    <div class="row">
+      <div class="col-md-12">
+        <section class="card card-body shadow mb-2">
+            <div class="col-md-6 offset-md-3 text-center py-1 text-primary">
+                <h4>REPORTE POR DISTRITO</h4>
+            </div>
+          <form method="GET" enctype="multipart/form-data" action="{% url 'rpt_compromiso_distrito_xls' %}">
+            <!-- cabecera-->   
+            <div class="form row">
+              <!-- años-->
+              <div class="col-md-2 form-group">
+                <div class="form-group">
+                    <label class="text-danger" for="anio" >AÑO:</label>
+                    <input type="text" 
+                            class="form-control" 
+                            id="anio" 
+                            name="anio"
+                            value="2025"
+                            readonly>
+                </div>
+              </div>
+              <!-- meses -->
+              <div class="col-md-3 form-group">
+                <div class="form-group">
+                    <label class="text-danger" for="mes">MES DE EVALUACION:</label>
+                    <input type="text" 
+                            class="form-control" 
+                            id="mes" 
+                            name="mes"
+                            value="JULIO"
+                            readonly>
+                </div>
+              </div>
+              <!-- Edades-->
+              <div class="col-md-4 form-group">
+                <div class="form-group">
+                    <label class="text-danger" for="edades">POR EDADES:</label>
+                    <select class="form-control" id="edades" name="edades">
+                      <option value = "" selected>30 dias a 12 meses</option>
+                    </select>
+                </div>
+              </div>
+              <!-- indicador cumple no cumple-->
+              <div class="col-md-3 form-group">
+                <div class="form-group">
+                    <label class="text-danger" for="cumple">ESTADO ACTUALIZACION:</label>
+                    <select class="form-control form-select-sm" id="cumple" name="cumple">
+                        <option value="">Todos</option>
+                        <option value="1">Cumplen</option>
+                        <option value="0">NO Cumplen</option>
+                    </select>
+                </div>            
+              </div>
+            </div>           
+            <!-- provincia-->                  
+            <div class="row">
+              <div class="col-md-12">
+                <div class="form-group">
+                    <label class="text-primary" for="provincia">PROVINCIA :</label>
+                    <select class="form-control" name="provincia" hx-get="{% url 'p_distrito_compromiso' %}" hx-trigger="change" hx-target="#p_distrito_compromiso">
+                        <option value="">--- SELECCIONAR ---</option>
+                        {% for p in provincias %}
+                        <option value="{{ p.ubigueo_filtrado }}">{{ p.Provincia }} </option>
+                        {% endfor %}
+                    </select>
+                </div>
+              </div>
+            </div>
+                
+            <!--- INCLUDE DROP INCLUYENTE --->
+            <div class="row">
+              <div class="col-md-12">
+                <div class="form-group">
+                  <div id="p_distrito_compromiso">
+                      {% include 'compromiso_nino/partials/p_distritos.html' %}
+                  </div>
+                </div>
+              </div>
+            </div> 
+            <!--- FIN INCLUDE DROP INCLUYENTE --->
+
+            <br>        
+            <div class="col-md-6 offset-md-3 text-center py-1 form-group">        
+              <button type="submit" class="btn btn-success btn-lg text-center"><i class="fa fa-file-excel"></i> Procesar</button>
+            </div>
+          </form>
+        </section>
+      </div> 
+    </div>
+  </main>

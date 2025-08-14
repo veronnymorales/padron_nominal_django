@@ -1,0 +1,21 @@
+<label class="text-primary" for="p_microredes_establec" name="p_microredes_establec">MICRORED : </label>
+    <select class="form-control custom-select" name="p_microredes_establec" hx-get="{% url 'p_establecimientos' %}" hx-trigger="change" hx-target="#p_establecimientos" hx-include="[name='redes']">
+        <option value="">--- SELECCIONAR ---</option>
+        {% for m in microredes %}
+        <option value="{{ m.Codigo_MicroRed }}">{{ m.MicroRed }}</option>
+        {% endfor %}
+    </select>
+    
+    {% if is_htmx %}
+    <!--- INCLUDE DROP INCLUYENTE ESTABLECIMIENTO --->
+    <div class="row">
+        <div class="col-md-12">
+          <div class="form-group">
+            <div id="p_establecimientos" hx-swap-oob="true">
+                {% include 'discapacidad/partials/p_establecimientos.html' %}
+            </div>
+          </div>
+        </div>
+      </div>  
+      <!--- FIN INCLUDE DROP INCLUYENTE ESTABLECIMIENTO --->
+    {% endif %}

@@ -1,0 +1,10 @@
+<!-- HTMX -->
+<script src="https://unpkg.com/htmx.org@1.9.2/dist/htmx.js"></script>
+
+<label class="text-primary" for="p_establecimiento">ESTABLECIMIENTO : </label>
+    <select class="form-control custom-select" name="p_establecimiento" hx-trigger="change" hx-target="{% url 'rpt_operacional_establec_xls' %}">
+        <option value="">--- SELECCIONAR ---</option>
+        {% for e in establec %}
+        <option value="{{ e.Codigo_Unico }}">{{ e.Nombre_Establecimiento }}</option>
+        {% endfor %}
+    </select>

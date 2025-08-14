@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body %}
+<!-- FILTROS -->
+<div class="card card-primary">
+    <div class="card card-header">
+        <h3 class="card-title">DIRECTORIO DE RESPONSABLES MUNICIPIOS</h3>
+    </div>
+    <!-- TABLAS DETALLE -->  
+    <div class="card card-body">
+        <div class="row">
+            <div class="table-responsive">
+                <table id="table_padron_municipal" class="table table-bordered table-hover table-striped">
+                    <thead class="text-center" style="font-size: 12px;">
+                        <tr>
+                            <th>Ubigeo</th>
+                            <th>Provincia</th>
+                            <th>Distrito</th>
+                            <th>Nombre Municipio</th>
+                            <th>DNI</th>
+                            <th>Ap Paterno</th>
+                            <th>Ap Materno</th>
+                            <th>Nombres</th>
+                            <th>Telf./Celular</th>
+                            <th>Correo Electronico</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for municipio in municipios %}
+                        <tr>
+                            <td>{{ municipio.ubigueo }}</td>
+                            <td>{{ municipio.provincia }}</td>
+                            <td>{{ municipio.distrito }}</td>
+                            <td>{{ municipio.nombre_municipio }}</td>
+                            <td>{{ municipio.documento_identidad }}</td>
+                            <td>{{ municipio.apellido_paterno }}</td>
+                            <td>{{ municipio.apellido_materno }}</td>
+                            <td>{{ municipio.nombres }}</td>
+                            <td>{{ municipio.telefono }}</td>
+                            <td>{{ municipio.correo_electronico }}</td>
+                            <!--- ESTADO CONDICION --->
+                            {% if municipio.estado_auditoria is None %}
+                            <td>
+                                <span class="badge bg-secondary"> Enviado</span>
+                            </td>
+                            {% elif municipio.estado_auditoria  == "1" %}
+                            <td>
+                                <span class="badge bg-success"> Aprobado</span>
+                            </td>
+                            {% elif municipio.estado_auditoria  == "2" %}
+                            <td>
+                                <span class="badge bg-warning"> Proceso</span>
+                            </td>
+                            {% else %}
+                            <td>
+                                <span class="badge bg-danger"> Observado</span>
+                            </td>
+                            {% endif %}
+                            <!------------------------>  
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div> 
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body %}
+<!-- FILTROS -->
+<div class="card card-primary">
+    <div class="card card-header">
+        <h3 class="card-title">RESPONSABLE DEL SALUD</h3>
+    </div>
+    <!-- TABLAS DETALLE -->  
+    <div class="card card-body">
+        <div class="row">
+            <a href="{% url 'salud-create' %}" class="btn btn-primary btn-lg"><i class="fa fa-plus"></i> Registrar Responsable</a>
+        </div>
+        </br>
+        <div class="row">
+            <div class="table-responsive">
+                <table id="" class="table table-bordered table-hover table-striped">
+                    <thead class="text-center" style="font-size: 12px;">
+                        <tr>
+                            <th>Provincia</th>
+                            <th>Distrito</th>
+                            <th>DNI</th>
+                            <th>Ap Paterno</th>
+                            <th>Ap Materno</th>
+                            <th>Nombres</th>
+                            <th>Telf./Celular</th>
+                            <th>Correo Electronico</th>
+                            <th>Red</th>
+                            <th>Oficio</th>
+                            <th>Resolucion</th>
+                            <th>Formato</th>
+                            <th>Excel</th>
+                            <th>Estado</th>
+                            <th>Situacion</th> 
+                            <th>Acción</th> 
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in salud %}
+                        <tr>
+                            <td>{{ s.provincia }}</td>
+                            <td>{{ s.distrito }}</td>
+                            <td>{{ s.documento_identidad }}</td>
+                            <td>{{ s.apellido_paterno }}</td>
+                            <td>{{ s.apellido_materno }}</td>
+                            <td>{{ s.nombres }}</td>
+                            <td>{{ s.telefono }}</td>
+                            <td>{{ s.correo_electronico }}</td>
+                            <td>{{ s.red }}</td>
+                            <!-- OFICIO ---->                           
+                            {% if s.req_oficio == "" %}
+                            <td>
+                                <span class="text-warning">Pendiente</span>
+                            </td>
+                            {% elif s.req_oficio %}
+                            <td>
+                                <a href="#" class="btn btn-danger btn-sm" target="_blank"><i class="fa fa-file-pdf" aria-hidden="true"></i></a>
+                            </td>
+                            {% else %}
+                            <td>
+                                <span class="btn btn-light btn-sm"><i class="fa fa-file-pdf" aria-hidden="true"></i></span>
+                            </td>
+                            {% endif %}
+                            <!-- RESOLUCION ---->                           
+                            {% if s.req_resolucion == "" %}
+                            <td>
+                                <span class="text-warning">Pendiente</span>
+                            </td>
+                            {% elif s.req_resolucion %}
+                            <td>
+                                <a href="#" class="btn btn-danger btn-sm" target="_blank"><i class="fa fa-file-pdf" aria-hidden="true"></i></a>
+                            </td>
+                            {% else %}
+                            <td>
+                                <span class="btn btn-light btn-sm"><i class="fa fa-file-pdf" aria-hidden="true"></i></span>
+                            </td>
+                            {% endif %}
+                            <!-- ALTA ---->                           
+                            {% if s.req_formato_alta == "" %}
+                            <td>
+                                <span class="text-warning">Pendiente</span>
+                            </td>
+                            {% elif s.req_formato_alta %}
+                            <td>
+                                <a href="#" class="btn btn-danger btn-sm" target="_blank"><i class="fa fa-file-pdf" aria-hidden="true"></i></a>
+                            </td>
+                            {% else %}
+                            <td>
+                                <span class="btn btn-light btn-sm"><i class="fa fa-file-pdf" aria-hidden="true"></i></span>
+                            </td>
+                            {% endif %}
+                            <!-- EXCEL ---->                           
+                            {% if s.req_formato_excel == "" %}
+                            <td>
+                                <span class="text-warning">Pendiente</span>
+                            </td>
+                            {% elif s.req_formato_excel %}
+                            <td>
+                                <a href="#" class="btn btn-success btn-sm" target="_blank"><i class="fa fa-file-excel" aria-hidden="true"></i></a>
+                            </td>
+                            {% else %}
+                            <td>
+                                <span class="btn btn-success btn-sm"><i class="fa fa-file-excel" aria-hidden="true"></i></span>
+                            </td>
+                            {% endif %}
+                            <!--- ESTADO CONDICION --->
+                            {% if s.estado_auditoria is None %}
+                            <td>
+                                <span class="badge bg-secondary"> Enviado</span>
+                            </td>
+                            {% elif s.estado_auditoria  == "1" %}
+                            <td>
+                                <span class="badge bg-success"> Aprobado</span>
+                            </td>
+                            {% elif s.estado_auditoria  == "2" %}
+                            <td>
+                                <span class="badge bg-warning"> Proceso</span>
+                            </td>
+                            {% else %}
+                            <td>
+                                <span class="badge bg-danger"> Observado</span>
+                            </td>
+                            {% endif %}
+                            <!------------------------>  
+                            <!--- ESTADO SITUACION --->
+                            {% if s.situacion_usuario is None %}
+                            <td>
+                                <span class="badge bg-secondary"> </span>
+                            </td>
+                            {% else %}
+                                <td>{{ s.situacion_usuario }}</td>
+                            {% endif %}
+                            <!------------------------>  
+                            <!--- EDITAR  --->
+                            {% if s.estado_auditoria is None %}
+                            <td>
+                                <a href="{% url 'directorio_salud_detail' s.id %}" class="btn btn-warning btn-sm" disabled="disabled"><i class="fa fa-edit" aria-hidden="true"></i></a>
+                            </td>
+                            {% else %}
+                            <td>
+                                <span class="btn btn-light btn-sm"><i class="fa fa-edit" aria-hidden="true"></i></span>
+                            </td>
+                            {% endif %}
+                            <!----------------------->
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div> 
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,531 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block header %}
+<div class="container-fluid">
+    <div class="row mb-2">
+        <div class="col-sm-6">
+            <h4 class="m-0">Actualización del Padrón Nominal hasta los 12 meses</h4>
+        </div>
+    </div> <!-- Cierre del div.row -->
+</div> <!-- Cierre del div.container-fluid -->
+{% endblock %}
+
+{% block body %}
+<style>
+    /* General styles for dates */
+    .matrix-table td {
+        padding: 5px;
+        text-align: center;
+    }
+
+    /* Green background for dates */
+    .matrix-table .date-cell {
+        background-color: #dff0d8;
+        color: #3c763d;
+        font-weight: bold;
+    }
+
+    /* Red background for empty March values */
+    .matrix-table .empty-march {
+        background-color: #f2dede;
+        color: #a94442;
+    }
+
+    /* Alert label for municipalities with empty March */
+    .matrix-table .alert-label {
+        color: #a94442;
+        font-weight: bold;
+        margin-left: 10px;
+    }
+
+    /* Primera columna (Distrito/Municipio) ancho fijo y alineado a la izquierda */
+    .matrix-table th.municipality-name-col,
+    .matrix-table td.municipio-name-col {
+        min-width: 240px;
+        max-width: 360px;
+        width: 360px;
+        text-align: left;
+        background: #f8f9fa;
+        font-weight: bold;
+    }
+
+    /* Columnas de meses: ancho fijo igual para todas */
+    .matrix-table th:not(.municipality-name-col),
+    .matrix-table td:not(.municipio-name-col) {
+        min-width: 100px;
+        max-width: 120px;
+        width: 100px;
+        text-align: center;
+        vertical-align: middle;
+        word-break: break-word;
+    }
+
+    .alert-icon {
+        font-size: 0.8em;
+        padding: 3px 6px;
+        margin-left: 8px;
+        border-radius: 4px;
+    }
+
+    #chart_regional_mensual {
+        width: 100%;
+        height: 280px;
+        max-width: 1300px;
+        margin: 0 auto;
+    }
+
+    .text-danger { color: #dc3545 !important; }
+    .text-warning { color: #ffc107 !important; }
+    .text-success { color: #28a745 !important; }
+    .font-weight-bold { font-weight: bold; }
+    .badge-danger { background: #dc3545 !important; color: #fff; }
+    .badge-warning { background: #ffc107 !important; color: #212529; }
+    .badge-success { background: #28a745 !important; color: #fff; }
+
+    /* DataTables compact styles */
+    .dt-small,
+    #ranking-table td, #ranking-table th,
+    #detalle-tabla td, #detalle-tabla th {
+        font-size: 12px !important;
+        padding: 4px 6px !important;
+    }
+
+    #ranking-container {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    #ranking-table {
+        width: 100% !important;
+        table-layout: auto !important;
+        margin-bottom: 0 !important;
+    }
+    /* Reducir ancho de columnas Provincia y Distrito en ranking-table */
+    #ranking-table th, #ranking-table td {
+        white-space: nowrap;
+        vertical-align: middle;
+        font-size: 12px !important;
+        padding: 4px 6px !important;
+    }
+    
+    #ranking-table th:nth-child(1),
+    #ranking-table td:nth-child(1),
+    #ranking-table th:nth-child(2),
+    #ranking-table td:nth-child(2) {
+        min-width: 60px;
+        max-width: 110px;
+        width: 90px;
+    }
+    
+    #ranking-table th,
+    #ranking-table td {
+        text-align: center;
+    }
+    
+    .card .card-body {
+        padding: 1rem 1rem 0.5rem 1rem;
+
+    /* Ajustar el pie de página de DataTables para que no esté separado */
+    .dataTables_wrapper .dataTables_paginate {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+    }
+    .dataTables_wrapper .dataTables_info {
+        padding-bottom: 0 !important;
+        margin-bottom: 0 !important;
+    }
+
+    /* Responsivo: tabla desplazable horizontal en pantallas pequeñas */
+    @media (max-width: 991.98px) {
+        #matrix-container {
+            overflow-x: auto;
+        }
+        .matrix-table {
+            width: 1200px;
+            min-width: 900px;
+        }
+        .matrix-table th.municipality-name-col,
+        .matrix-table td.municipio-name-col {
+            min-width: 120px;
+            max-width: 180px;
+            width: 140px;
+        }
+        .matrix-table th:not(.municipality-name-col),
+        .matrix-table td:not(.municipio-name-col) {
+            min-width: 60px;
+            max-width: 70px;
+            width: 65px;
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        .matrix-table th,
+        .matrix-table td {
+            min-width: 50px;
+            font-size: 12px;
+            padding: 2px;
+        }
+        .matrix-table th.municipality-name-col,
+        .matrix-table td.municipio-name-col {
+            min-width: 80px;
+            font-size: 12px;
+        }
+        .matrix-table th:not(.municipality-name-col),
+        .matrix-table td:not(.municipio-name-col) {
+            min-width: 40px;
+            width: 45px;
+        }
+    }
+</style>
+
+<section class="content">
+    <div class="container-fluid">        
+        <!-- Ranking -->
+        <div class="row">
+            <!-- Primera columna - Tabla de Ranking de Municipios -->
+            <section class="col-lg-5 connectedSortable">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">AVANCE POR ZONA</h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <button type="button" class="btn btn-tool" data-card-widget="maximize">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                        </div>
+                    </div>
+                
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-12 d-flex justify-content-left">
+                                <div id="chart_regional_mensual">
+
+                                </div>
+                            </div><!-- /.card-body -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Segunda columna - Tabla de detalle -->
+            <section class="col-lg-7 connectedSortable">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">AVANCE POR MUNICIPIOS</h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <button type="button" class="btn btn-tool" data-card-widget="maximize">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                        </div>
+                    </div>
+                
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-12">
+                                <!-- Contenido para la nueva tabla -->
+                                <div id="detalle-tabla-container">
+                                    <table class="table table-bordered table-striped ranking-compromiso" id="ranking-compromiso">
+                                        <thead>
+                                            <tr>
+                                                <!-- Encabezados para la nueva tabla -->
+                                                <th>Zona</th>
+                                                <th>Provincia</th>
+                                                <th>Distrito</th>
+                                                <th>Meta</th>
+                                                <th>Avance</th>
+                                                <th>Cumplimiento</th>
+                                                <th>Estado</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="ranking-compromiso-distrito">
+                                            <!-- Contenido de la nueva tabla -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div><!-- /.container-fluid -->
+</section>
+
+<!-- Incluir la sección de seguimiento nominal desde un partial -->
+{% include "compromiso_nino/_seguimiento_nominal_compromiso.html" %}
+
+<!-- Librería ECharts -->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.2/dist/echarts.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css"/>
+<script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+
+<script type="text/javascript">
+
+    // AVANCE ZONA
+    document.addEventListener('DOMContentLoaded', function () {
+        const chartDom = document.getElementById('chart_regional_mensual');
+        if (!chartDom) {
+            console.error('Contenedor del gráfico no encontrado');
+            return;
+        }
+        const myChart = echarts.init(chartDom);
+        const maxValue = 100;
+        const meta = 80;
+    
+        function cargarDatosMensual() {
+            fetch(`{% url "index_compromiso_nino" %}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                // Ordenar los datos por avance (de mayor a menor)
+                const combinedData = data.zona.map((zona, index) => ({
+                    zona: zona,
+                    den: data.den?.[index] || 0,
+                    num: data.num?.[index] || 0,
+                    avance: data.avance?.[index] || 0
+                })).sort((a, b) => b.avance - a.avance);
+
+                // Separar los datos ordenados
+                const zonaSorted = combinedData.map(item => item.zona);
+                const denSorted = combinedData.map(item => item.den);
+                const numSorted = combinedData.map(item => item.num);
+                const avanceSorted = combinedData.map(item => item.avance);
+                
+                const option = {
+                    title: {
+                        text: `Avance Por Zonas (Mes de Junio)`,
+                        left: 'center'
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        formatter: function (params) {
+                            const idx = params[0].dataIndex;
+                            return `
+                                <strong>${zonaSorted[idx]}</strong><br/>
+                                Den: ${denSorted[idx]}<br/>
+                                Num: ${numSorted[idx]}<br/>
+                                Avance: ${avanceSorted[idx].toFixed(1)}%
+                            `;
+                        }
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: zonaSorted,
+                        axisLabel: {
+                            fontSize: 10 // <-- Aquí ajustamos el tamaño de la letra a 10px
+                        }
+                        //axisLabel: { rotate: 45 } // Rotar etiquetas si hay muchas zonas
+                    },
+                    yAxis: {
+                        type: 'value',
+                        max: maxValue,
+                        axisLabel: { formatter: '{value}%' }
+                    },
+                    series: [{
+                        name: '% Avance',
+                        type: 'bar',
+                        data: avanceSorted,
+                        label: {
+                            show: true,
+                            position: 'top',
+                            formatter: '{c}%'
+                        },
+                        markLine: {
+                            symbol: 'none',
+                            lineStyle: { type: 'dash', color: 'red' },
+                            data: [{ yAxis: meta }],
+                            label: {
+                                show: true,
+                                formatter: `M: ${meta}%`,
+                                position: 'end'
+                            }
+                        }
+                    }]
+                };
+                myChart.setOption(option);
+            })
+            .catch(error => console.error('Error:', error.message));
+        }
+        cargarDatosMensual();
+    });
+    
+
+    // RANKING
+    document.addEventListener('DOMContentLoaded', function() {
+        const datosTable = document.getElementById('ranking-compromiso-distrito');
+        
+        function getBarColor(avance) {
+            // Manejar entrada en formato de porcentaje (como "99.62%")
+            if (typeof avance === 'string') {
+                // Eliminar el símbolo de porcentaje si existe
+                avance = avance.replace('%', '');
+                // Reemplazar coma por punto para manejar formato decimal con coma
+                avance = avance.replace(',', '.');
+            }
+            
+            // Convertir a número decimal
+            avance = parseFloat(avance);
+            
+            // Validar que sea un número válido
+            if (isNaN(avance)) {
+                throw new Error('El valor de avance debe ser un número válido.');
+            }
+            
+            // Redondear a 2 decimales para evitar problemas de precisión
+            avance = Math.round(avance * 100) / 100;
+            
+            // Manejar casos especiales
+            if (avance < 0) {
+                return '#dc3545'; // Rojo: Valor inválido (menor a 0)
+            }
+            
+            if (avance > 100) {
+                return '#dc3545'; // Rojo: Valor inválido (mayor a 100)
+            }
+            
+            // Determinar el color basado en el avance según la tabla mostrada
+            if (avance >= 90) {
+                return '#28a745'; // Verde: CUMPLE (≥ 90%)
+            } else if (avance >= 85) {
+                return '#ffc107'; // Amarillo: PROCESO (≥ 85% y < 90%)
+            } else if (avance >= 80) {
+                return '#ffc107'; // Amarillo: RIESGO (≥ 80% y < 85%)
+            } else {
+                return '#dc3545'; // Rojo: Por debajo de los umbrales aceptables
+            }
+        }
+        
+        function loadRankingData() {
+            fetch(`{% url "index_compromiso_nino" %}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Error en la respuesta');
+                return response.json();
+            })
+            .then(data => {
+                // Validación de datos
+                if (data.provincia_ranking && data.provincia_ranking.length > 0) {
+                    let tableContent = '';
+                    data.provincia_ranking.forEach((provincia, index) => {
+                        // Determinar color según estado
+                        let estado = data.estado_ranking[index];
+                        let avance = parseFloat(data.avance_ranking[index]);
+                        let estadoClass = '';
+                        
+                        // Formatear avance para asegurar que siempre tenga 2 decimales
+                        let avanceFormatted = avance.toFixed(2);
+                        
+                        if (estado === 'RIESGO') {
+                            estadoClass = 'badge badge-danger';
+                        } else if (estado === 'PROCESO') {
+                            estadoClass = 'badge badge-warning';
+                        } else {
+                            estadoClass = 'badge badge-success';
+                        }
+                        
+                        // Determinar ícono según estado
+                        let icono = '';
+                        if (estado === 'RIESGO') {
+                            icono = '<i class="fas fa-times-circle mr-1"></i>';
+                        } else if (estado === 'PROCESO') {
+                            icono = '<i class="fas fa-exclamation-triangle mr-1"></i>';
+                        } else {
+                            icono = '<i class="fas fa-check-circle mr-1"></i>';
+                        }
+
+
+                        // Manejar casos especiales cuando el avance es 0 (para denominadores sin datos)
+                        if (data.den_ranking[index] === 0) {
+                            avanceFormatted = '0.00';
+                        }
+                        
+                        tableContent += `
+                            <tr>
+                                <td style="font-size: 14px;">${data.zona_ranking[index]}</td>
+                                <td style="font-size: 14px;">${data.provincia_ranking[index]}</td>
+                                <td style="font-size: 14px;">${data.distrito_ranking[index]}</td>
+                                <td class="text-center" style="font-size: 14px;">${data.den_ranking[index]}</td>
+                                <td class="text-center" style="font-size: 14px;">${data.num_ranking[index]}</td>
+                                <td>
+                                    <div class="progress" style="height: 22px; background: #f3f3f3;">
+                                        <div 
+                                            class="progress-bar"
+                                            role="progressbar"
+                                            style="
+                                                width: ${avance > 0 ? avance : 0}%;
+                                                background-color: ${ getBarColor(avance) };
+                                                font-weight: bold;
+                                                font-size: 12px;
+                                                color: #fff;
+                                                display: flex;
+                                                align-items: center;
+                                                justify-content: center;
+                                            "
+                                            aria-valuenow="${avance}"
+                                            aria-valuemin="0"
+                                            aria-valuemax="100"
+                                            >
+                                            ${avanceFormatted}%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="${estadoClass}" style="font-size: 12px;">
+                                        ${icono}${estado}
+                                    </span>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    datosTable.innerHTML = tableContent;
+        
+                    // Inicializar DataTable (destruir si ya existe)
+                    if ($.fn.DataTable.isDataTable('#ranking-compromiso')) {
+                        $('#ranking-compromiso').DataTable().destroy();
+                    }
+                    $('#ranking-compromiso').DataTable({
+                        pageLength: 10,
+                        lengthChange: true,
+                        lengthMenu: [                 // Opciones de visualización
+                            [10, 25, 50, 100, -1],
+                            [10, 25, 50, 100, "Todos"]
+                        ],
+                        searching: true,
+                        ordering: true,
+                        order: [[6, 'asc']],  // Mantener esta ordenación por si el usuario reordena la tabla
+                        paging: true,
+                        info: false,
+                        autoWidth: false,
+                        language: {
+                            url: 'https://cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json'
+                        }
+                    });
+                } else {
+                    datosTable.innerHTML = '<tr><td colspan="7">No hay datos de ranking</td></tr>';
+                }
+            })
+            .catch(error => {
+                console.error('Error al cargar el ranking:', error.message);
+                datosTable.innerHTML = '<tr><td colspan="7">Error al cargar el ranking</td></tr>';
+            });
+        }
+    
+        // ¡Llama la función aquí!
+        loadRankingData();
+    });
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,10 @@
+<!-- HTMX -->
+<script src="https://unpkg.com/htmx.org@1.9.2/dist/htmx.js"></script>
+
+<label class="text-primary">DISTRITO :</label>
+    <select class="form-control custom-select" name="distritos" hx-get="{% url 'rpt_seguimiento_dist_xls' %}" hx-trigger="change" hx-target="#resultado"> <!-- Excel -->
+        <option value="">--- SELECCIONAR ---</option>
+        {% for d in distritos %}
+        <option value="{{ d.Ubigueo_Establecimiento }}">{{ d.Distrito }}</option>
+        {% endfor %}
+    </select>

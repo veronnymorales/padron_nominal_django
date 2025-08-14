@@ -1,0 +1,107 @@
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('detalle-card-container');
+    const filtroForm = document.querySelector('form');
+
+    function getBarColor(value) {
+        if (value < 50) return '#dc3545'; // red
+        if (value < 85) return '#ffc107'; // yellow
+        return '#28a745'; // green
+    }
+
+    function loadRankingData(params = {}) {
+        const queryString = new URLSearchParams(params).toString();
+        fetch(`{% url "index_pn_poblacion" %}?${queryString}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error en la respuesta del servidor');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Datos recibidos:', data);
+
+            if (!container) {
+                console.error('El elemento contenedor "detalle-card-container" no fue encontrado.');
+                return;
+            }
+
+            if (data && data.c_grupo_edad && Array.isArray(data.c_grupo_edad) && data.c_grupo_edad.length > 0) {
+                let cardHTML = '<div class="row">';
+
+                for (let i = 0; i < data.c_grupo_edad.length; i++) {
+                    const edad = data.c_grupo_edad[i] || 'N/A';
+                    const avance = data.c_cobertura[i] ? parseFloat(data.c_cobertura[i]) : 0;
+                    const avanceFormatted = avance.toFixed(1);
+                    const numerador = data.c_numerador[i] || 0;
+                    const denominador = data.c_denominador[i] || 0;
+
+                    cardHTML += `
+                        <div class="col-md-2 col-sm-6 col-12">
+                            <div class="info-box">
+                                <div class="info-box-content">
+                                    <span class="info-box-text">${edad}</span>
+                                    <div class="progress" style="height: 22px; background: #f3f3f3;">
+                                        <div 
+                                            class="progress-bar"
+                                            role="progressbar"
+                                            style="
+                                                width: ${avance > 0 ? avance : 0}%;
+                                                background-color: ${ getBarColor(avance) };
+                                                font-weight: bold;
+                                                font-size: 12px;
+                                                color: #fff;
+                                                display: flex;
+                                                align-items: center;
+                                                justify-content: center;
+                                            "
+                                            aria-valuenow="${avance}"
+                                            aria-valuemin="0"
+                                            aria-valuemax="100"
+                                            >
+                                            ${avanceFormatted}%
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">${numerador} </small> / ${denominador}</small>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                cardHTML += '</div>';
+                container.innerHTML = cardHTML;
+            } else {
+                container.innerHTML = '<p class="text-center">No se encontraron datos para mostrar.</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error al cargar los datos:', error);
+            if (container) {
+                container.innerHTML = '<p class="text-center text-danger">Ocurrió un error al cargar los datos.</p>';
+            }
+        });
+    }
+
+    if (filtroForm) {
+        filtroForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(filtroForm);
+            const params = {};
+            for (const [key, value] of formData.entries()) {
+                if (value) {
+                    params[key] = value;
+                }
+            }
+            loadRankingData(params);
+        });
+
+        filtroForm.dispatchEvent(new Event('submit'));
+        
+    } else {
+        loadRankingData();
+    }
+});
+</script>

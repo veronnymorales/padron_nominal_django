@@ -1,0 +1,399 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body %}
+<!-- SEGUIMIENTO -->
+<div class="row">
+    <div class="col-md-4">
+        <div class="card card-primary">
+            <div class="card-header">
+                <h3 class="card-title">INDICADOR 1 - RANKING DE MUNICIPIOS</h3>
+            </div>
+
+            <div class="card-body">
+                <div class="form-group">
+                    <div class="row">
+                        <!-- Sección para seleccionar el mes -->
+                        <div class="col-md-8 mb-3">
+                            <select class="form-control" id="mes-select">
+                                <option {% if mes_seleccionado == 'MAYO' %}{% endif %}>MAYO</option>
+                                <option {% if mes_seleccionado == 'JUNIO' %}{% endif %}>JUNIO</option>
+                                <option {% if mes_seleccionado == 'JULIO' %}{% endif %}>JULIO</option>
+                                <option {% if mes_seleccionado == 'AGOSTO' %}{% endif %}>AGOSTO</option>
+                                <option {% if mes_seleccionado == 'SETIEMBRE' %}selected{% endif %}>SETIEMBRE</option>
+                                <option {% if mes_seleccionado == 'OCTUBRE' %}{% endif %}>OCTUBRE</option>
+                                <option {% if mes_seleccionado == 'NOVIEMBRE' %}{% endif %}>NOVIEMBRE</option>
+                                <option {% if mes_seleccionado == 'DICIEMBRE' %}{% endif %}>DICIEMBRE</option>
+                                <!-- Agrega más opciones de meses según sea necesario -->
+                            </select>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <!-- Botón para obtener los datos -->
+                            <button class="btn btn-success" id="obtener-datos"><i class="fas fa-eye"></i> Obtener datos</button>
+                        </div>
+                    </div>
+                </div> 
+
+                <div class="form-group">
+                    <div class="row">            <!-- Sección para mostrar la tabla de resultados -->
+                        <div class="table-responsive">
+                            <table id="datos-table" class="table table-bordered table-hover table-striped">
+                                <thead class="text-center" style="font-size: 13px;">
+                                    <tr class="text-center">
+                                        <th>PROVINCIA</th>
+                                        <th>DISTRITO</th>
+                                        <th>DEN</th>
+                                        <th>NUM</th>
+                                        <th>%</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="datos-table" class="text-center" style="font-size: 14px;">
+                                    <!-- Los datos se cargarán aquí mediante JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            
+            </div> 
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card card-primary">
+            <div class="card-header">
+                <h3 class="card-title">PORCENTAJE DE NIÑOS Y NIÑAS DE 60 DIAS REGISTRADOS EN EL PADRON NOMINAL CON INFORMACION PRIORIZADA COMPLETA</h3>
+            </div>
+    
+            <div class="card-body">
+                <div class="form-group">
+                    <form id="filtroForm">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label>PROVINCIA :</label>
+                                <!-- Selector de provincia -->
+                                <select name="provincia" id="provincia" class="form-control select2bs4" style="width: 100%;">
+                                    <option value="">Todas las provincias</option>
+                                    {% for provincia in provincias %}
+                                    <option value="{{ provincia }}">{{ provincia }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>        
+                    
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label>DISTRITO :</label>
+                                <select name="distrito" id="distrito" disabled class="form-control select2bs4" style="width: 100%;">
+                                    <option value="">Todos los distritos</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label style="color:white;">FILTRAR :</label>
+                                <button class="btn btn-success col" type="submit"><i class="fa fa-search"></i> Filtrar </button>
+                            </div>
+                        </div>
+                    </div>    
+                    </form>
+                </div>
+
+                </br>
+                <div class="container">
+                    <!-- Contenedor para el gráfico -->
+                    <div id="chart" style="width: 100%; height: 400px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CABECERA SEGUIMIENTO-->
+<div class="row">
+    <div class="col-md-12">
+        <div class="alert alert-secondary text-center py-3" role="alert">
+            <h4><i class="fa fa-running"></i> SEGUIMIENTO NOMINAL</h4>
+        </div>
+    </div>
+</div>
+<!-- FIN DE CABECERA -->
+
+<!-- SEGUIMIENTO -->
+<div class="row">
+    <div class="col-md-3">
+        <section class="card card-body shadow mb-2">
+            <div hx-target="#content_1" hx-swap="innerHTML" hx-indicator="#loading_1">
+                <ul class="list-group">
+                    <a href="#" class="list-group-item list-group-item-action active">TIPO DE REPORTE</a>
+                    <a href="#" class="list-group-item list-group-item-action" hx-get="{% url 'sello_get_provincias' 1 %}" hx-swap="innerHTML" hx-trigger="click">POR PROVINCIA</a>
+                    <a href="#" class="list-group-item list-group-item-action" hx-get="{% url 'sello_get_distritos' 1 %}" hx-swap="innerHTML" hx-trigger="click">POR DISTRITO</a>
+                </ul>
+            </div>
+        </section>
+    </div>
+
+    <div class="col-md-9"> 
+        <div id="loading_1" style="display:none;">Cargando...
+            <section class="card card-body shadow mb-2">
+            </section>
+        </div>
+        <div id="content_1">
+            <section class="card card-body shadow mb-2">
+            </section>
+        </div>
+    </div>
+</div>
+<!-- FIN DE SEGUIMIENTO -->
+
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.2/dist/echarts.min.js"></script>
+<script>
+let dataTableInstance; // Definir globalmente
+document.addEventListener('DOMContentLoaded', function() {
+    // Obtener referencias a los elementos HTML
+    const mesSelect = document.getElementById('mes-select');
+    const obtenerDatosButton = document.getElementById('obtener-datos');
+    const datosTable = document.getElementById('datos-table');
+    // let dataTableInstance = null;  // Variable para almacenar la instancia de DataTables
+    
+    const provinciaSelect = document.getElementById('provincia');
+    const distritoSelect = document.getElementById('distrito');
+    const filtroForm = document.getElementById('filtroForm');
+
+    // Inicialización del gráfico
+    var chartContainer = document.getElementById('chart');
+    var myChart = echarts.init(chartContainer);  // Inicializar el gráfico ECharts
+    
+    // Función para determinar el color del avance
+    function getAvanceColor(avance) {
+        if (avance === 100) return 'green';
+        if (avance >= 70 && avance <= 80) return 'orange';
+        if (avance < 70) return 'red';
+        return 'black'; // color por defecto para otros casos
+    }
+
+    // Evento para obtener datos basado en el mes seleccionado
+    obtenerDatosButton.addEventListener('click', function() {
+            const mes = mesSelect.value;
+    
+            fetch('{% url "index-sello" %}?mes=' + encodeURIComponent(mes), {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (dataTableInstance) {
+                    dataTableInstance.destroy();
+                }
+    
+                if (data.provincia && data.provincia.length > 0) {
+                    let tableContent = '<thead class="text-center" style="font-size: 13px;"><tr><th>PROVINCIA</th><th>DISTRITO</th><th>DEN</th><th>NUM</th><th>%</th></tr></thead><tbody>';
+                    data.provincia.forEach((provincia, index) => {
+                        const avanceColor = getAvanceColor(data.avance_r[index]);
+                        tableContent += `
+                            <tr>
+                                <td style="font-size: 14px;">${data.provincia[index]}</td>
+                                <td style="font-size: 14px;">${data.distrito[index]}</td>
+                                <td class="text-center" style="font-size: 14px;">${data.num_r[index]}</td>
+                                <td class="text-center" style="font-size: 14px;">${data.den_r[index]}</td>
+                                <td class="text-center" style="font-size: 14px; color: ${avanceColor}; font-weight: bold;">${data.avance_r[index]}%</td>
+                            </tr>
+                        `;
+                    });
+                    tableContent += '</tbody>';
+                    datosTable.innerHTML = tableContent;
+    
+                    try {
+                        dataTableInstance = $('#datos-table').DataTable({
+                            dom:"<'row'<'col-sm-12 col-md-6'f><'col-sm-12 col-md-6'l>>" +
+                                "<'row'<'col-sm-12'tr>>" +
+                                "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+                            language: {
+                                "decimal": "",
+                                "emptyTable": "No hay información",
+                                "info": "Mostrando _START_ a _END_ de _TOTAL_ ",
+                                "infoEmpty": "Mostrando 0 to 0 of 0 ",
+                                "infoFiltered": "(Filtrado de _MAX_ total )",
+                                "infoPostFix": "",
+                                "thousands": ",",
+                                "lengthMenu": "Mostrar _MENU_ ",
+                                "loadingRecords": "Cargando...",
+                                "processing": "Procesando...",
+                                "search": "Buscar:",
+                                "zeroRecords": "Sin resultados encontrados",
+                                "paginate": {
+                                    "first": "Primero",
+                                    "last": "Último",
+                                    "next": "Siguiente",
+                                    "previous": "Anterior"
+                                }
+                            },
+                            order: [[4, 'desc']],
+                            columnDefs: [
+                                { targets: '_all', sortable: true }
+                            ]
+                        });
+                    } catch (error) {
+                        console.error('Error al inicializar DataTables:', error);
+                    }
+                } else {
+                    console.error('Datos de ranking no válidos:', data);
+                    datosTable.innerHTML = '<tr><td colspan="5">No hay datos disponibles</td></tr>';
+                }
+            })
+            .catch(error => {
+                console.error('Error al obtener los datos:', error);
+                datosTable.innerHTML = '<tr><td colspan="5">Error al cargar los datos</td></tr>';
+            });
+        });
+
+    // Evento de cambio de provincia
+    provinciaSelect.addEventListener('change', function() {
+        var provincia = this.value;
+        distritoSelect.disabled = !provincia;
+        distritoSelect.innerHTML = '<option value="">Todos los distritos</option>';
+
+        if (provincia) {
+            // Solicitud AJAX para obtener distritos
+            fetch('{% url "index-sello" %}?get_distritos=1&provincia=' + encodeURIComponent(provincia), {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(distritos => {
+                // Poblar el selector de distritos
+                distritos.forEach(function(distrito) {
+                    var option = document.createElement('option');
+                    option.value = distrito.Distrito;
+                    option.textContent = distrito.Distrito;
+                    distritoSelect.appendChild(option);
+                });
+            });
+        }
+    });
+
+    // Evento de envío del formulario
+    filtroForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var formData = new FormData(this);
+
+        // Solicitud AJAX para obtener datos de avance
+        fetch('{% url "index-sello" %}?' + new URLSearchParams(formData), {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                console.error('Error:', data.error);
+                return;
+            }
+
+            // Configuración y actualización del gráfico
+            var option = {
+                title: {
+                    text: 'EVALUACION MENSUAL'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                },
+                legend: {
+                    data: ['Denominador', 'Numerador', 'Avance']
+                },
+                xAxis: [
+                    {
+                        type: 'category',
+                        data: data.fechas,
+                        axisPointer: {
+                            type: 'shadow'
+                        }
+                    }
+                ],
+                yAxis: [
+                    {
+                        type: 'value',
+                        name: 'Cantidad',
+                        min: 0,
+                        axisLabel: {
+                            formatter: '{value}'
+                        }
+                    },
+                    {
+                        type: 'value',
+                        name: 'Avance (%)',
+                        min: 0,
+                        max: 100,
+                        interval: 20,
+                        axisLabel: {
+                            formatter: '{value}%'
+                        }
+                    }
+                ],
+                series: [
+                    {
+                        name: 'Denominador',
+                        type: 'bar',
+                        data: data.den,
+                        label: {
+                            show: true,
+                            position: 'top',
+                            formatter: '{c}',
+                            fontSize: 12,
+                            fontWeight: 'bold'
+                        },
+                        itemStyle: {
+                            color: '#91cc75'
+                        }
+                    },
+                    {
+                        name: 'Numerador',
+                        type: 'bar',
+                        data: data.num,
+                        label: {
+                            show: true,
+                            position: 'top',
+                            formatter: '{c}',
+                            fontSize: 12,
+                            fontWeight: 'bold'
+                        },
+                        itemStyle: {
+                            color: '#fac858'
+                        }
+                    },
+                    {
+                        name: 'Avance',
+                        type: 'line',
+                        yAxisIndex: 1,
+                        data: data.avance,
+                        itemStyle: {
+                            color: '#5470c6'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top',
+                            formatter: '{c}%',
+                            fontSize: 12,
+                            fontWeight: 'bold'
+                        }
+                    }
+                ]
+            };
+            myChart.setOption(option);
+        })
+        .catch(error => {
+            console.error('Error al obtener los datos:', error);
+        });
+    });
+});
+</script>
+
+{% endblock %}

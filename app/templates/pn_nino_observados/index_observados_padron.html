@@ -1,0 +1,433 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body %}
+<style>
+    #progress-chart {
+        width: 100%;
+        min-width: 320px;
+        height: 340px;
+        max-width: 100%;
+        margin: 0 auto;
+        display: block;
+    }
+    @media (max-width: 767.98px) {
+        #progress-chart {
+            height: 220px;
+        }
+    }
+
+</style>
+
+
+<section class="content">
+    <div class="container-fluid">
+        <!-- Cards -->
+        <div class="row" id="cards-observados-container">
+            <div class="col-lg-4 col-12">
+                <div class="small-box bg-info">
+                    <div class="inner">
+                        <h3 id="totalRecords">--</h3>
+                        <p>Total de Niños Registrados </p>
+                    </div>
+                    <div class="icon"><i class="fas fa-database"></i></div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-12">
+                <div class="small-box bg-danger">
+                    <div class="inner">
+                        <h3 id="totalErrors">--</h3>
+                        <p>Niños con errores en Observados</p>
+                    </div>
+                    <div class="icon"><i class="fas fa-exclamation-triangle"></i></div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-12">
+                <div class="small-box bg-warning">
+                    <div class="inner">
+                        <h3 id="inTransit">--</h3>
+                        <p>Niños en Tránsito</p>
+                    </div>
+                    <div class="icon"><i class="fas fa-route"></i></div>
+                </div>
+            </div>
+        </div>
+        <!-- Grafico Mensual-->  
+        
+        <!-- Gráficos de Progreso -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-chart-bar mr-1"></i>
+                            Cantidad de Niños Observados por Edad
+                        </h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="container">
+                            <div id="progress-chart"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Ranking de Municipios</h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <button type="button" class="btn btn-tool" data-card-widget="maximize">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                        </div>
+                    </div>
+                
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-12 d-flex justify-content-left">
+                                <div id="ranking-container">
+                                    <table class="table table-bordered table-striped ranking-table" id="ranking-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Provincia</th>
+                                                <th>Distrito</th>
+                                                <th>Edad</th>
+                                                <th>Estado</th>
+                                                <th>Cantidad</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="ranking-body">
+                                        
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div><!-- /.card-body -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Matriz  -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-chart-bar mr-1"></i>
+                            Cantidad de Niños Observados por Edad
+                        </h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                            <div id="detalle-container" style="overflow-x:auto;">
+                                <table class="table table-bordered table-striped" id="detalle-table">
+                                    <thead>
+                                        <tr style="font-size: 12px;">
+                                            <th>CodP</th>
+                                            <th>TDoc</th>
+                                            <th>CNV</th>
+                                            <th>CUI</th>
+                                            <th>DNI</th>
+                                            <th>Nombre Niño</th>
+                                            <th>Sexo</th>
+                                            <th>Seguro</th>
+                                            <th>Fecha Nac</th>
+                                            <th>Edad</th>
+                                            <th>Descripción</th>
+                                            <th>Provincia</th>
+                                            <th>Distrito</th>
+                                            <th>Visitado</th>
+                                            <th>Encontrado</th>
+                                            <th>CodEESS</th>
+                                            <th>Nombre EESS</th>
+                                            <th>Frecuencia</th>
+                                            <th>DNI Madre</th>
+                                            <th>Nombre Madre</th>
+                                            <th>Celular</th>
+                                            <th>Estado</th>
+                                            <th>Renaes</th>
+                                            <th>Nombre Establecimiento</th>
+                                            <th>Ubigeo Establecimiento</th>
+                                            <th>Cod Red</th>
+                                            <th>Red</th>
+                                            <th>Cod Microred</th>
+                                            <th>Microred</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="detalle-body">
+                                        <!-- Aquí se insertan las filas por JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                    </div>
+                </div>
+            </div>  
+        </div>
+        <!-- Ranking -->
+
+    </div><!-- /.container-fluid -->
+</section>
+
+<!-- Librería ECharts -->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.2/dist/echarts.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css"/>
+<script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+<!-- Agrega estos enlaces antes de tu script de inicialización de DataTable -->
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/1.7.1/css/buttons.dataTables.min.css"/>
+<script src="https://cdn.datatables.net/buttons/1.7.1/js/dataTables.buttons.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/1.7.1/js/buttons.html5.min.js"></script>
+
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+        cargarCards();
+        cargarGraficoEdades();
+        cargarRanking();
+        cargarSeguimientoDetalle();
+    });
+    
+    // Función para cargar los cards
+    function cargarCards() {
+        const estadoMap = { 1: 'TOTAL', 2: 'ERROR', 4: 'TRANSITO' };
+        fetch("{% url 'index_observados_padron' %}", {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.estado && data.estado.length > 0) {
+                data.estado.forEach((estado, idx) => {
+                    let nombre = estadoMap[estado];
+                    if (nombre === 'TOTAL') {
+                        document.getElementById('totalRecords').textContent = data.cantidad[idx];
+                    } else if (nombre === 'ERROR') {
+                        document.getElementById('totalErrors').textContent = data.cantidad[idx];
+                    } else if (nombre === 'TRANSITO') {
+                        document.getElementById('inTransit').textContent = data.cantidad[idx];
+                    }
+                });
+            }
+        });
+    }
+    
+    // Función para cargar el gráfico de edades
+    function cargarGraficoEdades() {
+        fetch("{% url 'index_observados_padron' %}", {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Mapear datos filtrados
+            const edades = {0:'0A',1:'1A',2:'2A',3:'3A',4:'4A',5:'5A'};
+            const indices = data.edad ? data.edad.map((_, i) => i) : [];
+            const datosCompletos = indices.map(i => ({
+                edad: parseInt(data.edad[i]),
+                nombreedad: edades[data.edad[i]],
+                nino_observado: data.cantidad_barras[i],
+                nino_transito: data.estado_barras[i],
+            }));
+    
+            // Ordenar y preparar arrays
+            datosCompletos.sort((a, b) => a.edad - b.edad);
+            const nombresedadOrdenados = datosCompletos.map(d => d.nombreedad);
+            const nino_observadoOrdenados = datosCompletos.map(d => d.nino_observado);
+            const nino_transitoOrdenados = datosCompletos.map(d => d.nino_transito);
+    
+            // Render ECharts
+            var myChart = echarts.init(document.getElementById('progress-chart'));
+            var option = {
+                tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+                legend: { data: ['Niños Observados','Niños transito'] },
+                xAxis: [{ type: 'category', data: nombresedadOrdenados, axisPointer: { type: 'shadow' } }],
+                yAxis: [{ type: 'value', name: 'Cantidad', min: 0, axisLabel: { formatter: '{value}' } }],
+                series: [
+                    {
+                        name: 'Observados',
+                        type: 'bar',
+                        data: nino_observadoOrdenados,
+                        label: { show: true, position: 'top', formatter: '{c}', fontSize: 12, fontWeight: 'bold' },
+                        itemStyle: { color: '#DC3545' }
+                    },
+                    {
+                        name: 'Transito',
+                        type: 'bar',
+                        data: nino_transitoOrdenados,
+                        label: { show: true, position: 'top', formatter: '{c}', fontSize: 12, fontWeight: 'bold' },
+                        itemStyle: { color: '#fac858' }
+                    }
+                ]
+            };
+            myChart.setOption(option);
+        });
+    }
+    
+    // Función para cargar el ranking
+    function cargarRanking() {
+        const datosTable = document.getElementById('ranking-body');
+        fetch("{% url 'index_observados_padron' %}", {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Error en la respuesta');
+            return response.json();
+        })
+        .then(data => {
+            if (data.provincia_ranking && data.provincia_ranking.length > 0) {
+                let tableContent = '';
+                data.provincia_ranking.forEach((provincia, index) => {
+                    let estado = data.estado_ranking[index];
+                    let estadoClass = '';
+                    let estadoTexto = '';
+    
+                    // Renombrar estado según valor
+                    if (estado === 2 || estado === '2' || estado === 6 || estado === '6') {
+                        estadoTexto = 'OBSERVADO';
+                        estadoClass = 'badge badge-danger';
+                    } else if (estado === 4 || estado === '4') {
+                        estadoTexto = 'EN TRANSITO';
+                        estadoClass = 'badge badge-warning';
+                    } else {
+                        estadoTexto = estado;
+                        estadoClass = 'badge badge-success';
+                    }
+    
+                    tableContent += `
+                        <tr>
+                            <td style="font-size: 14px;">${data.provincia_ranking[index]}</td>
+                            <td style="font-size: 14px;">${data.distrito_ranking[index]}</td>
+                            <td class="text-center" style="font-size: 14px; color:blue;">${data.edad_ranking[index]} años</td>
+                            <td class="text-center"><span class="${estadoClass}" style="font-size: 14px;">${estadoTexto}</span></td>
+                            <td class="text-center" style="font-size: 14px;">${data.cantidad_ranking[index]}</td>
+                        </tr>
+                    `;
+                });
+                datosTable.innerHTML = tableContent;
+    
+                // Inicializar DataTable (destruir si ya existe)
+                if ($.fn.DataTable.isDataTable('#ranking-table')) {
+                    $('#ranking-table').DataTable().destroy();
+                }
+                $('#ranking-table').DataTable({
+                    pageLength: 10,
+                    lengthChange: false,
+                    searching: true,
+                    ordering: true,
+                    info: false,
+                    autoWidth: false,
+                    language: {
+                        url: 'https://cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json'
+                    }
+                });
+            } else {
+                datosTable.innerHTML = '<tr><td colspan="6">No hay datos de ranking</td></tr>';
+            }
+        })
+        .catch(error => {
+            console.error('Error al cargar el ranking:', error.message);
+            datosTable.innerHTML = '<tr><td colspan="6">Error al cargar el ranking</td></tr>';
+        });
+    }
+
+    function cargarSeguimientoDetalle() {
+        const datosTableDetalle = document.getElementById('detalle-body');
+        fetch("{% url 'index_observados_padron' %}", {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Error en la respuesta');
+            return response.json();
+        })
+        .then(data => {
+            if (data.provincia_seguimiento && data.provincia_seguimiento.length > 0) {
+                let tableContentDetalle = '';
+                data.provincia_seguimiento.forEach((provincia, index) => {
+                    // Detecta si el estado es 4 o '4'
+                    let estadoFila = data.estado_registro[index];
+                    let rowClass = (estadoFila === 4 || estadoFila === '4') ? 'style="background-color: #fff3cd;"' : '';
+                    tableContentDetalle += `
+                        <tr ${rowClass}>
+                            <td style="font-size: 12px;">${data.cod_pad[index]}</td>
+                            <td style="font-size: 12px;">${data.tipo_doc[index]}</td>
+                            <td style="font-size: 12px;">${data.cnv[index]}</td>
+                            <td style="font-size: 12px;">${data.cui[index]}</td>
+                            <td style="font-size: 12px;">${data.dni[index]}</td>
+                            <td style="font-size: 12px;">${data.nombre_completo_nino[index]}</td>
+                            <td style="font-size: 12px;">${data.sexo_letra[index]}</td>
+                            <td style="font-size: 12px;">${data.seguro[index]}</td>
+                            <td style="font-size: 12px;">${data.fecha_nacimiento_date[index]}</td>
+                            <td style="font-size: 12px;">${data.edad_letras[index]}</td>
+                            <td style="font-size: 12px;">${data.descripcion[index]}</td>
+                            <td style="font-size: 12px;">${data.provincia_seguimiento[index]}</td>
+                            <td style="font-size: 12px;">${data.distrito_seguimiento[index]}</td>
+                            <td style="font-size: 12px;">${data.menor_visitado[index]}</td>
+                            <td style="font-size: 12px;">${data.menor_encontrado[index]}</td>
+                            <td style="font-size: 12px;">${data.codigo_eess[index]}</td>
+                            <td style="font-size: 12px;">${data.nombre_eess[index]}</td>
+                            <td style="font-size: 12px;">${data.frecuencia_atencion[index]}</td>
+                            <td style="font-size: 12px;">${data.dni_madre[index]}</td>
+                            <td style="font-size: 12px;">${data.nombre_completo_madre[index]}</td>
+                            <td style="font-size: 12px;">${data.numero_celular[index]}</td>
+                            <td style="font-size: 12px;">${data.estado_registro[index]}</td>
+                            <td style="font-size: 12px;">${data.renaes[index]}</td>
+                            <td style="font-size: 12px;">${data.nombre_establecimiento[index]}</td>
+                            <td style="font-size: 12px;">${data.ubigueo_establecimiento[index]}</td>
+                            <td style="font-size: 12px;">${data.codigo_red[index]}</td>
+                            <td style="font-size: 12px;">${data.red[index]}</td>
+                            <td style="font-size: 12px;">${data.codigo_microred[index]}</td>
+                            <td style="font-size: 12px;">${data.microred[index]}</td>
+                        </tr>
+                    `;
+                });
+                datosTableDetalle.innerHTML = tableContentDetalle;
+    
+                // Inicializar DataTable (destruir si ya existe)
+                if ($.fn.DataTable.isDataTable('#detalle-table')) {
+                    $('#detalle-table').DataTable().destroy();
+                }
+                $('#detalle-table').DataTable({
+                    pageLength: 10,
+                    lengthChange: false,
+                    searching: true,
+                    ordering: true,
+                    info: false,
+                    autoWidth: false,
+                    scrollX: true,
+                    language: {
+                        url: 'https://cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json'
+                    },
+                    dom: 'Bfrtip', // <--- agrega esto para mostrar los botones
+                    buttons: [
+                        {
+                            extend: 'excelHtml5',
+                            text: 'Exportar a Excel',
+                            className: 'btn btn-success'
+                        }
+                    ],
+                    order: [[11, 'asc'], [12, 'asc']] // Ordena por provincia y luego distrito
+                });
+            } else {
+                datosTableDetalle.innerHTML = '<tr><td colspan="28">No hay datos de observados</td></tr>';
+            }
+        })
+        .catch(error => {
+            console.error('Error al cargar el observados:', error.message);
+            datosTableDetalle.innerHTML = '<tr><td colspan="28">Error al cargar observados</td></tr>';
+        });
+    }
+    
+</script>
+
+{% endblock %}

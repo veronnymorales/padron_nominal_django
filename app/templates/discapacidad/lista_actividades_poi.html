@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% load static %}
+{% block body %}
+
+<div class="display-1 text-left  mt-4">
+  <h2>Lista de Actividades POI</h2>
+</div>
+
+<!-- Barra de búsqueda y filtros -->
+<section class="row mb-4">
+    <div class="col-md-6">
+        <form method="get" action="{% url 'lista_actividades_poi' %}">
+            <div class="input-group">
+                <input type="text" class="form-control" name="q" placeholder="Buscar por actividad o centro de costo" value="{{ request.GET.q }}">
+                <div class="input-group-append">
+                    <button class="btn btn-outline-secondary" type="submit">Buscar</button>
+               </div>
+            </div>
+        </form>
+    </div>
+    <div class="col-md-6">
+        <form method="get" action="{% url 'lista_actividades_poi' %}">
+            <div class="row">
+                <div class="col-md-4">
+                    <select name="ano" class="form-control">
+                        <option value="">Año</option>
+                        {% for ano in anos_disponibles %}
+                            <option value="{{ ano }}" {% if ano == request.GET.ano %}selected{% endif %}>{{ ano }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <select name="tipo_categoria" class="form-control">
+                        <option value="">Tipo de Categoría</option>
+                        {% for tipo in tipos_categoria %}
+                            <option value="{{ tipo.0 }}" {% if tipo.0 == request.GET.tipo_categoria %}selected{% endif %}>{{ tipo.1 }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary btn-block">Filtrar</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+
+<!-- Tabla de Actividades -->
+<div class="table-responsive">
+<table class="table table-striped table-hover">
+    <thead class="thead-dark">
+        <tr>
+            <th>Id</th>
+            <th>UE</th>
+            <th>Cod.Pro</th>
+            <th>Producto</th>
+            <th>Cod.Act</th>
+            <th>Actividad/Sub Producto</th>
+            <th>Meta Física Anual</th>
+            <th>Avance MF Anual</th>
+            <th>Avance %</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for actividad in actividades %}
+        <tr>
+            <td class="text-primary">{{ actividad.id }}</td>
+            <td>{{ actividad.unidad_ejecutora }}</td>
+            <td>{{ actividad.categoria_presupuestal }}</td>
+            <td>{{ actividad.producto_presupuestal }}</td>
+            <td>{{ actividad.tipo_actividad_obra }}</td>
+            <td>{{ actividad.actividad_presupuestal }}</td>
+            <td>{{ actividad.total_meta_fisica }}</td>
+            <td>{{ actividad.meta_presupuestal }}</td>
+            <td>{{ actividad.meta_presupuestal }}</td>
+            <td>
+                <a href="{% url 'registro_actividad_detail' actividad.id %}" class="btn btn-info btn-sm">Detalle</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="9" class="text-center">No se encontraron actividades.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+
+<!-- Paginación -->
+{% if actividades.has_other_pages %}
+<nav aria-label="Page navigation" class="mt-4">
+<ul class="pagination justify-content-center">
+    {% if actividades.has_previous %}
+        <li class="page-item"><a class="page-link" href="?page={{ actividades.previous_page_number }}&q={{ request.GET.q }}&ano={{ request.GET.ano }}&tipo_categoria={{ request.GET.tipo_categoria }}">&laquo; Anterior</a></li>
+    {% else %}
+        <li class="page-item disabled"><span class="page-link">&laquo; Anterior</span></li>
+    {% endif %}
+
+    {% for i in actividades.paginator.page_range %}
+        {% if actividades.number == i %}
+            <li class="page-item active"><span class="page-link">{{ i }} <span class="sr-only">(current)</span></span></li>
+        {% else %}
+            <li class="page-item"><a class="page-link" href="?page={{ i }}&q={{ request.GET.q }}&ano={{ request.GET.ano }}&tipo_categoria={{ request.GET.tipo_categoria }}">{{ i }}</a></li>
+        {% endif %}
+    {% endfor %}
+
+    {% if actividades.has_next %}
+        <li class="page-item"><a class="page-link" href="?page={{ actividades.next_page_number }}&q={{ request.GET.q }}&ano={{ request.GET.ano }}&tipo_categoria={{ request.GET.tipo_categoria }}">Siguiente &raquo;</a></li>
+    {% else %}
+        <li class="page-item disabled"><span class="page-link">Siguiente &raquo;</span></li>
+    {% endif %}
+</ul>
+</nav>
+{% endif %}
+
+<!-- Botón para Registrar Nueva Actividad -->
+<div class="mt-4">
+<a href="{% url 'registro_actividad_poi' %}" class="btn btn-success btn-lg btn-block">Registrar Nueva Actividad POI</a>
+</div>
+{% endblock %}
