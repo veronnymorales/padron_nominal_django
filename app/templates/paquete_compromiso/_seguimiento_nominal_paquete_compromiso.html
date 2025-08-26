@@ -1,0 +1,107 @@
+<!-- SEGUIMIENTO -->
+<div class="row">
+  <div class="col-md-3">
+    <section class="card card-body shadow mb-2">
+      <div hx-target="#content_1" hx-swap="innerHTML" hx-indicator="#loading_1">
+        <ul class="list-group">
+          <div class="list-group-item list-group-item-action active">
+            TIPO DE REPORTE
+          </div>
+          <div
+            class="list-group-item list-group-item-action fw-bold"
+            onclick="toggleSubMenu('salud-submenu')"
+            style="cursor: pointer; background-color: #6c757d; color: white"
+          >
+            <i class="fa fa-hospital-alt me-2"></i><span> AMBITO SALUD</span>
+            <i class="fa fa-chevron-down float-end"></i>
+          </div>
+          <div id="salud-submenu" style="display: none">
+            <a
+              href="#"
+              class="list-group-item list-group-item-action ps-4"
+              hx-get="{% url 'get_redes_paquete_compromiso' 1 %}"
+              hx-swap="innerHTML"
+              hx-trigger="click"
+              >POR RED</a
+            >
+            <a
+              href="#"
+              class="list-group-item list-group-item-action ps-4"
+              hx-get="{% url 'get_microredes_paquete_compromiso' 1 %}"
+              hx-swap="innerHTML"
+              hx-trigger="click"
+              >POR MICRORED</a
+            >
+            <a
+              href="#"
+              class="list-group-item list-group-item-action ps-4"
+              hx-get="{% url 'get_establecimientos_paquete_compromiso' 1 %}"
+              hx-swap="innerHTML"
+              hx-trigger="click"
+              >POR ESTABLECIMIENTO</a
+            >
+          </div>
+          <div
+            class="list-group-item list-group-item-action fw-bold"
+            onclick="toggleSubMenu('municipio-submenu')"
+            style="cursor: pointer; background-color: #6c757d; color: white"
+          >
+            <i class="fa fa-city me-2"></i><span> AMBITO MUNICIPIO</span>
+            <i class="fa fa-chevron-down float-end"></i>
+          </div>
+          <div id="municipio-submenu" style="display: none">
+            <a
+              href="#"
+              class="list-group-item list-group-item-action ps-4"
+              hx-get="{% url 'get_provincias_paquete_compromiso' 1 %}"
+              hx-swap="innerHTML"
+              hx-trigger="click"
+              >POR PROVINCIA</a
+            >
+            <a
+              href="#"
+              class="list-group-item list-group-item-action ps-4"
+              hx-get="{% url 'get_distrito_paquete_compromiso' 1 %}"
+              hx-swap="innerHTML"
+              hx-trigger="click"
+              >POR DISTRITO</a
+            >
+          </div>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <div class="col-md-9">
+    <div id="loading_1" style="display: none">
+      Cargando...
+      <section class="card card-body shadow mb-2"></section>
+    </div>
+    <div id="content_1">
+      <section class="card card-body shadow mb-2"></section>
+    </div>
+  </div>
+</div>
+
+<script>
+  function toggleSubMenu(id) {
+    const submenu = document.getElementById(id);
+    if (submenu.style.display === "none") {
+      submenu.style.display = "block";
+      // Cambia el ícono de flecha hacia abajo a flecha hacia arriba
+      const icon = event.currentTarget.querySelector(".fa-chevron-down");
+      if (icon) {
+        icon.classList.remove("fa-chevron-down");
+        icon.classList.add("fa-chevron-up");
+      }
+    } else {
+      submenu.style.display = "none";
+      // Cambia el ícono de flecha hacia arriba a flecha hacia abajo
+      const icon = event.currentTarget.querySelector(".fa-chevron-up");
+      if (icon) {
+        icon.classList.remove("fa-chevron-up");
+        icon.classList.add("fa-chevron-down");
+      }
+    }
+  }
+</script>

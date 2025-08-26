@@ -1,0 +1,217 @@
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Corrección: ID consistente con el usado en el código
+    const container = document.getElementById("chart_establecimiento_ranking");
+    const filtroForm = document.querySelector("form");
+    function loadRankingData(params = {}) {
+      const queryString = new URLSearchParams(params).toString();
+      fetch(`{% url "index_paquete_compromiso" %}?${queryString}`, {
+        headers: { "X-Requested-With": "XMLHttpRequest" },
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then((data) => {
+          console.log("Datos recibidos:", data);
+          if (!container) {
+            console.error(
+              'El elemento contenedor "chart_establecimiento_ranking" no fue encontrado.'
+            );
+            return;
+          }
+          // Validar que los datos existan
+          if (
+            !data.e_establecimiento ||
+            !Array.isArray(data.e_establecimiento)
+          ) {
+            console.error("Los datos de establecimiento no son válidos");
+            container.innerHTML =
+              '<p class="text-center text-danger">Datos de establecimiento no válidos.</p>';
+            return;
+          }
+          // Verificar que todos los arrays tengan la misma longitud
+          const arrays = [
+            data.e_establecimiento,
+            data.e_denominador,
+            data.e_numerador,
+            data.e_cobertura,
+          ];
+          const lengths = arrays.map((arr) => (arr ? arr.length : 0));
+          const allSameLength = lengths.every((len) => len === lengths[0]);
+          if (!allSameLength) {
+            console.error("Los arrays de datos no tienen la misma longitud");
+            container.innerHTML =
+              '<p class="text-center text-danger">Error en la estructura de datos.</p>';
+            return;
+          }
+          // Limpiar el gráfico anterior si existe
+          if (container._chartInstance) {
+            container._chartInstance.dispose();
+          }
+          var myChart = echarts.init(container);
+          // Guardar referencia para poder limpiar después
+          container._chartInstance = myChart;
+          // Crear un array de objetos con todos los datos relacionados
+          const datosCompletos = data.e_establecimiento.map(
+            (nombre_establecimiento, index) => ({
+              establecimiento: nombre_establecimiento,
+              denominador: data.e_denominador[index] || 0,
+              numerador: data.e_numerador[index] || 0,
+              cobertura: data.e_cobertura[index] || 0,
+            })
+          );
+          // Ordenar los datos por cobertura de mayor a menor
+          datosCompletos.sort((a, b) => b.cobertura - a.cobertura);
+          // Separar los datos ordenados en arrays individuales
+          // Para gráfico horizontal, invertimos el orden para mostrar mayor cobertura arriba
+          const establecimiento = datosCompletos
+            .map((d) => d.establecimiento)
+            .reverse();
+          const denominadores = datosCompletos
+            .map((d) => d.denominador)
+            .reverse();
+          const numeradores = datosCompletos.map((d) => d.numerador).reverse();
+          const coberturas = datosCompletos.map((d) => d.cobertura).reverse();
+          const totalEstablecimientos = establecimiento.length;
+          // Calcular población restante (denominador - numerador)
+          const poblacionRestante = denominadores.map((denom, index) =>
+            Math.max(0, denom - numeradores[index])
+          );
+          var option = {
+            title: {
+              text: ``,
+              left: "center",
+              textStyle: {
+                fontSize: 16,
+                fontWeight: "bold",
+              },
+            },
+            tooltip: {
+              trigger: "axis",
+              axisPointer: {
+                type: "shadow",
+              },
+              formatter: function (params) {
+                if (!params || params.length === 0) return "";
+                const establecimientoIndex = establecimiento.indexOf(
+                  params[0].name
+                );
+                const totalPoblacion = denominadores[establecimientoIndex];
+                const pnCount = numeradores[establecimientoIndex];
+                const cobertura = coberturas[establecimientoIndex];
+                let result = params[0].name + "<br/>";
+                result += "Población: " + totalPoblacion + "<br/>";
+                result += "PN: " + pnCount + "<br/>";
+                result += "Cob: " + parseFloat(cobertura).toFixed(2) + "%<br/>";
+                return result;
+              },
+            },
+            legend: {
+              data: ["Cobertura PN"],
+              show: true,
+            },
+            xAxis: {
+              type: "value",
+              name: "Cantidad",
+              min: 0,
+              axisLabel: {
+                formatter: "{value}",
+              },
+            },
+            yAxis: {
+              type: "category",
+              data: establecimiento, // Eje Y: Establecimientos de salud
+              axisPointer: {
+                type: "shadow",
+              },
+              axisLabel: {
+                interval: 0,
+                fontSize: 8,
+                fontWeight: "normal",
+              },
+            },
+            dataZoom: [
+              {
+                type: "slider",
+                yAxisIndex: 0,
+                width: 10,
+                right: 10,
+                start:
+                  totalEstablecimientos > 10
+                    ? Math.max(
+                        0,
+                        ((totalEstablecimientos - 10) / totalEstablecimientos) *
+                          100
+                      )
+                    : 0,
+                end: 100,
+                handleSize: 8,
+                showDetail: false,
+              },
+              {
+                type: "inside",
+                yAxisIndex: 0,
+              },
+            ],
+            series: [
+              {
+                name: "Cobertura PN",
+                type: "bar",
+                data: denominadores, // Usar los datos reales para posicionar correctamente
+                label: {
+                  show: true,
+                  position: "inside",
+                  formatter: function (params) {
+                    const cobertura = coberturas[params.dataIndex];
+                    return parseFloat(cobertura).toFixed(1) + "%";
+                  },
+                  fontSize: 10,
+                  color: "#fff",
+                  fontWeight: "bold",
+                },
+                itemStyle: {
+                  color: "#91cc75",
+                },
+              },
+            ],
+          };
+          myChart.setOption(option);
+          // Manejar el redimensionamiento de la ventana
+          window.addEventListener("resize", function () {
+            if (myChart) {
+              myChart.resize();
+            }
+          });
+        })
+        .catch((error) => {
+          console.error("Error al cargar los datos:", error);
+          if (container) {
+            container.innerHTML =
+              '<p class="text-center text-danger">Ocurrió un error al cargar los datos: ' +
+              error.message +
+              "</p>";
+          }
+        });
+    }
+    if (filtroForm) {
+      filtroForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        const formData = new FormData(filtroForm);
+        const params = {};
+        for (const [key, value] of formData.entries()) {
+          if (value) {
+            params[key] = value;
+          }
+        }
+        loadRankingData(params);
+      });
+      // Cargar datos iniciales
+      filtroForm.dispatchEvent(new Event("submit"));
+    } else {
+      loadRankingData();
+    }
+  });
+</script>

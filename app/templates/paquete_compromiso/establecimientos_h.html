@@ -1,0 +1,258 @@
+<form method="GET" enctype="multipart/form-data" action="#" id="filter-form">
+  <!-- Grupo Izquierdo - Filtros Básicos -->
+  <div class="row align-items-end">
+    <!-- Año -->
+    <div class="col-md-2">
+      <div class="form-group">
+        <label class="text-primary">AÑO:</label>
+        <select
+          class="form-control form-control-sm select2"
+          id="anio"
+          name="anio"
+          style="width: 100%"
+        >
+          <option value="2024">2024</option>
+          <option value="2025" selected>2025</option>
+          <option value="2026">2026</option>
+        </select>
+      </div>
+    </div>
+    
+    <!-- Mes inicio -->
+    <div class="col-md-2">
+      <div class="form-group">
+        <label class="text-primary">MES INICIO:</label>
+        <select
+          class="form-control form-control-sm select2"
+          id="mes"
+          name="mes"
+          style="width: 100%"
+        >
+          <option value="1">ENERO</option>
+          <option value="2">FEBRERO</option>
+          <option value="3">MARZO</option>
+          <option value="4">ABRIL</option>
+          <option value="5">MAYO</option>
+          <option value="6">JUNIO</option>
+          <option value="7">JULIO</option>
+          <option value="8" selected="true">AGOSTO</option>
+          <option value="9">SETIEMBRE</option>
+          <option value="10">OCTUBRE</option>
+          <option value="11">NOVIEMBRE</option>
+          <option value="12">DICIEMBRE</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Mes final -->
+    <div class="col-md-2">
+      <div class="form-group">
+        <label class="text-primary">MES DE FINAL :</label>
+        <select
+          class="form-control form-control-sm select2"
+          id="mes"
+          name="mes"
+          style="width: 100%"
+        >
+          <option value="1">ENERO</option>
+          <option value="2">FEBRERO</option>
+          <option value="3">MARZO</option>
+          <option value="4">ABRIL</option>
+          <option value="5">MAYO</option>
+          <option value="6">JUNIO</option>
+          <option value="7">JULIO</option>
+          <option value="8" selected="true">AGOSTO</option>
+          <option value="9">SETIEMBRE</option>
+          <option value="10">OCTUBRE</option>
+          <option value="11">NOVIEMBRE</option>
+          <option value="12">DICIEMBRE</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- PROVINCIA -->
+    <div class="col-md-2">
+      <div class="form-group">
+        <label class="text-primary" for="provincias_h">PROVINCIA :</label>
+        
+        <select
+          class="form-control form-control-sm select2"
+          id="provincias_h"
+          name="provincias_h"
+          hx-get="{% url 'p_distritos_paquete_compromiso_h' %}"
+          hx-trigger="change"
+          hx-target="#p_distritos_paquete_compromiso_h"
+        >
+          <option value="">--- SELECCIONAR ---</option>
+          {% for p in provincias_h %}
+          <option value="{{ p.ubigueo_filtrado }}">{{ p.Provincia }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    
+    <!--- MICRORED INCLUDE DROP INCLUYENTE --->
+    <div class="col-md-2">
+      <div class="form-group">
+        <div id="p_distritos_paquete_compromiso_h">
+          {% include 'paquete_compromiso/partials/p_microredes_establec_h.html' %}
+        </div>
+      </div>
+    </div>
+    <!--- FIN INCLUDE DROP INCLUYENTE --->
+    
+    
+    <!-- Boton filtrar -->
+    <div class="col-md-2">
+      <div class="form-group">
+        <button type="submit" class="btn btn-primary btn-sm" id="filter-btn">
+          <i class="fas fa-filter"></i> Filtrar
+        </button>
+        <button type="reset" class="btn btn-default btn-sm" id="clear-btn">Limpiar</button>
+      </div>
+    </div>
+  </div>
+</form>
+
+
+<!-- Estilos específicos para forzar la visualización del campo de búsqueda -->
+<style>
+
+  /* Ajustar altura de los selects */
+  .select2-container .select2-selection--single {
+    height: 31px !important;
+  }
+
+  .select2-container .select2-selection--single .select2-selection__rendered {
+    line-height: 31px !important;
+  }
+
+  /* Asegurar que el dropdown tenga un z-index alto */
+  .select2-dropdown {
+    z-index: 9999 !important;
+  }
+</style>
+
+<script>
+
+  // Función principal para inicializar Select2
+  function setupSelect2() {
+    try {
+      // Configuración básica para todos los selects
+      var config = {
+        width: "100%",
+        minimumResultsForSearch: 0, // Siempre mostrar la búsqueda
+        placeholder: "Buscar...",
+        allowClear: true,
+      };
+
+      // Inicializar cada select individualmente
+      $("#anio").select2(config);
+      $("#mes").select2(config);
+      $("#red_h").select2(config);
+
+      // Para los selects dinámicos
+      function initDynamicSelects() {
+        $("select.select2")
+          .not("#anio, #mes, #red_h")
+          .each(function () {
+            var $this = $(this);
+            if (!$this.data("select2")) {
+              $this.select2(config);
+            }
+          });
+      }
+
+      // Inicializar selects dinámicos
+      initDynamicSelects();
+
+      // Manejar eventos HTMX
+      document.body.addEventListener("htmx:afterSwap", function () {
+        setTimeout(initDynamicSelects, 100);
+      });
+
+      // Forzar la visualización del campo de búsqueda cuando se abre el dropdown
+      $(document).on("select2:open", function () {
+        setTimeout(function () {
+          // Crear un campo de búsqueda si no existe
+          var $search = $(".select2-search--dropdown");
+          if ($search.length === 0 || $search.css("display") === "none") {
+            var $dropdown = $(".select2-dropdown");
+            if ($dropdown.length > 0) {
+              if ($search.length === 0) {
+                $(
+                  '<span class="select2-search select2-search--dropdown">' +
+                    '<input class="select2-search__field" type="search" tabindex="0" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" role="searchbox">' +
+                    "</span>"
+                ).prependTo($dropdown);
+              } else {
+                $search.show();
+              }
+            }
+          }
+
+          // Enfocar el campo de búsqueda
+          $(".select2-search__field").focus();
+        }, 0);
+      });
+
+      // Agregar un botón para mostrar el campo de búsqueda si no aparece
+      $(".select2").each(function () {
+        var $select = $(this);
+        var $container = $select.next(".select2-container");
+
+        // Agregar un botón de búsqueda
+        var $searchBtn = $(
+          '<button type="button" class="select2-search-btn" style="position: absolute; right: 25px; top: 0; height: 100%; background: none; border: none; cursor: pointer;">🔍</button>'
+        );
+        $container.css("position", "relative").append($searchBtn);
+
+        // Al hacer clic en el botón, abrir el dropdown y mostrar el campo de búsqueda
+        $searchBtn.on("click", function (e) {
+          e.stopPropagation();
+          $select.select2("open");
+          setTimeout(function () {
+            $(".select2-search__field").show().focus();
+          }, 0);
+        });
+      });
+    } catch (error) {
+      console.error("Error al configurar Select2:", error);
+    }
+  }
+
+  // Función para manejar el formulario y mostrar/ocultar contenido
+  function setupFormHandling() {
+    // Manejar envío del formulario
+    $("#filter-form").on("submit", function(e) {
+      e.preventDefault();
+      
+      // Mostrar el contenido principal
+      $("#main-content").show();
+      
+      // Opcional: scroll suave hacia el contenido
+      $('html, body').animate({
+        scrollTop: $("#main-content").offset().top - 100
+      }, 500);
+      
+      // Aquí puedes agregar lógica adicional para cargar datos
+      // Por ejemplo, hacer una petición AJAX para actualizar los gráficos
+    });
+    
+    // Manejar botón limpiar
+    $("#clear-btn").on("click", function() {
+      // Ocultar el contenido principal
+      $("#main-content").hide();
+      
+      // Limpiar el formulario
+      $("#filter-form")[0].reset();
+      
+      // Reinicializar los selects
+      $(".select2").val(null).trigger('change');
+      
+      // Restaurar valores por defecto
+      $("#anio").val("2025").trigger('change');
+      $("#mes").val("6").trigger('change');
+    });
+  }
+</script>

@@ -27,4 +27,6 @@ urlpatterns = [
     path('', include('pacto.urls')),
     ## PACTO COBERTURA POBLACION 
     path('', include('pn_poblacion.urls')),
+    ## PAQUETE COMPROMISO
+    path('', include('paquete_compromiso.urls')), 
 ]

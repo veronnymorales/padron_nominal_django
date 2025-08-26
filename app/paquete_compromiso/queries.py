@@ -11,16 +11,36 @@ def obtener_distritos(provincia):
     distritos = MAESTRO_HIS_ESTABLECIMIENTO.objects.filter(Provincia=provincia).values('Distrito').distinct().order_by('Distrito')
     return list(distritos)
 
-def obtener_avance_pn_poblacion(anio, mes_inicio, mes_fin, provincia, distrito):
+def obtener_avance_paquete_compromiso(anio, mes_inicio, mes_fin, provincia, distrito):
+    """
+    Obtiene el avance agregado del paquete compromiso con filtros opcionales.
+    Retorna un solo registro con la suma total de numerador, denominador y avance calculado.
+    
+    Args:
+        anio: Año de consulta
+        mes_inicio: Mes de inicio del rango
+        mes_fin: Mes final del rango
+        provincia: Código de provincia (4 dígitos)
+        distrito: Código de distrito (6 dígitos)
+    
+    Returns:
+        Lista con un diccionario conteniendo: num, den, avance
+    """
     try:
         with connection.cursor() as cursor:
+            print(f"[QUERY] Parámetros - Año: {anio}, Mes: {mes_inicio}-{mes_fin}, Provincia: {provincia}, Distrito: {distrito}")
+            
             sql_query = '''
                 SELECT 
-                    SUM(CAST([numerador] AS INT)) AS num,
-                    SUM(CAST([denominador] AS INT)) AS den,
-                    COALESCE(ROUND(
-                        SUM(CAST(numerador AS FLOAT)) * 100.0 / NULLIF(SUM(CAST(denominador AS FLOAT)), 0), 2), 0
-                    ) AS avance
+                    SUM(ISNULL(CAST([numerador] AS INT), 0)) AS num,
+                    SUM(ISNULL(CAST([denominador] AS INT), 0)) AS den,
+                    CASE 
+                        WHEN SUM(ISNULL(CAST([denominador] AS INT), 0)) = 0 THEN 0.0
+                        ELSE ROUND(
+                            (SUM(ISNULL(CAST([numerador] AS INT), 0)) * 100.0) / 
+                            SUM(ISNULL(CAST([denominador] AS INT), 0)), 2
+                        )
+                    END AS avance
                 FROM 
                     Compromiso_1.dbo.PAQUETE_COMPROMISO
             '''
@@ -41,29 +61,349 @@ def obtener_avance_pn_poblacion(anio, mes_inicio, mes_fin, provincia, distrito):
                 conditions.append("mes = %s")
                 params.append(mes_inicio)
             
+            # Filtros de ubicación geográfica - usando LIKE para códigos de ubigeo
             if provincia and provincia != '':
-                conditions.append("Provincia = %s")
+                conditions.append("LEFT(ubigeo, 4) = %s")
                 params.append(provincia)
+                print(f"Filtro provincia aplicado: LEFT(Ubigeo, 4) = {provincia}")
             
             if distrito and distrito != '':
-                conditions.append("Distrito = %s")
+                conditions.append("ubigeo = %s")
                 params.append(distrito)
+                print(f"Filtro distrito aplicado: Ubigeo = {distrito}")
             
             # Agregar WHERE solo si hay condiciones
             if conditions:
                 sql_query += " WHERE " + " AND ".join(conditions)
             
+            print(f"[QUERY] SQL: {sql_query.strip()}")
+            print(f"[QUERY] Parámetros: {params}")
+            
             cursor.execute(sql_query, params)
             resultados = cursor.fetchall()
             column_names = [desc[0] for desc in cursor.description]
             datos = [dict(zip(column_names, fila)) for fila in resultados]
+            
+            # Validar que siempre retorne un registro
+            if not datos:
+                datos = [{'num': 0, 'den': 0, 'avance': 0.0}]
+                print(f"[QUERY] Sin datos encontrados, retornando valores por defecto")
+            else:
+                # Mostrar resultado en formato de matriz
+                print(f"[QUERY] Resultado: Num={datos[0]['num']}, Den={datos[0]['den']}, Avance={datos[0]['avance']}%")
+                print_resultado_matriz(datos[0], provincia, distrito)
+                
         return datos
     except Exception as e:
-        print(f"Error al obtener el avance regional: {e}")
+        print(f"[ERROR] Error al obtener el avance regional: {e}")
         return []
 
+def print_resultado_matriz(resultado, provincia=None, distrito=None):
+    """
+    Imprime el resultado en formato de matriz para mejor visualización
+    """
+    num = resultado.get('num', 0)
+    den = resultado.get('den', 0)
+    avance = resultado.get('avance', 0.0)
+    
+    # Determinar el ámbito geográfico
+    ambito = "NACIONAL"
+    if provincia and distrito:
+        ambito = f"DISTRITO ({distrito})"
+    elif provincia:
+        ambito = f"PROVINCIA ({provincia})"
+    
+    print("\n" + "="*60)
+    print("           RESUMEN PAQUETE COMPROMISO")
+    print("="*60)
+    print(f"ÁMBITO GEOGRÁFICO: {ambito}")
+    print("-"*60)
+    print(f"{'INDICADOR':<25} {'VALOR':<15} {'DESCRIPCIÓN':<20}")
+    print("-"*60)
+    print(f"{'Numerador':<25} {num:<15,} {'Cantidad alcanzada':<20}")
+    print(f"{'Denominador':<25} {den:<15,} {'Meta establecida':<20}")
+    print(f"{'Avance (%)':<25} {avance:<15.2f} {'Porcentaje logrado':<20}")
+    print("-"*60)
+    
+    # Clasificación del avance
+    if avance >= 67:
+        clasificacion = "CUMPLE (≥67%)"
+        estado = "✅"
+    elif avance >= 33:
+        clasificacion = "EN PROCESO (33-66%)"
+        estado = "⚠️"
+    else:
+        clasificacion = "EN RIESGO (<33%)"
+        estado = "❌"
+    
+    print(f"{'Estado':<25} {estado} {clasificacion}")
+    print("="*60 + "\n")
+
+def obtener_variables_paquete_compromiso(anio, mes_inicio, mes_fin, provincia, distrito):
+    """
+    Obtiene el avance agregado del paquete compromiso con filtros opcionales.
+    Retorna un solo registro con la suma total de numerador, denominador y avance calculado.
+    
+    Args:
+        anio: Año de consulta
+        mes_inicio: Mes de inicio del rango
+        mes_fin: Mes final del rango
+        provincia: Código de provincia (4 dígitos)
+        distrito: Código de distrito (6 dígitos)
+    
+    Returns:
+        Lista con un diccionario conteniendo: num, den, avance
+    """
+    try:
+        with connection.cursor() as cursor:
+            print(f"[QUERY] Parámetros - Año: {anio}, Mes: {mes_inicio}-{mes_fin}, Provincia: {provincia}, Distrito: {distrito}")
+            
+            sql_query = '''
+                    SELECT 
+                    	-- ind cred
+                    	SUM(ISNULL(CAST(denominador AS INT), 0)) AS den_variable,
+                    	SUM(ISNULL(CAST(num_cred AS INT), 0)) AS num_cred,
+                    		CASE 
+                    	    WHEN SUM(ISNULL(CAST(denominador AS INT), 0)) = 0 THEN 0.0
+                    	    ELSE ROUND(
+                    	        (SUM(ISNULL(CAST(num_cred AS INT), 0)) * 100.0) / 
+                    	        SUM(ISNULL(CAST(denominador AS INT), 0)), 2
+                    	    )
+                    	END AS avance_cred,
+                    	-- cred rn
+                        SUM(ISNULL(CAST(num_cred_rn AS INT), 0)) AS num_cred_rn,
+                    	CASE 
+                    	   WHEN SUM(ISNULL(CAST(denominador AS INT), 0)) = 0 THEN 0.0
+                    	   ELSE ROUND(
+                    	       (SUM(ISNULL(CAST(num_cred_rn AS INT), 0)) * 100.0) / 
+                    	       SUM(ISNULL(CAST(denominador AS INT), 0)), 2
+                    	   )
+                    	END AS avance_cred_rn,
+                    	-- cred mensual
+                        SUM(ISNULL(CAST(num_cred_mensual AS INT), 0)) AS num_cred_mensual,
+                    	CASE 
+                    	   WHEN SUM(ISNULL(CAST(denominador AS INT), 0)) = 0 THEN 0.0
+                    	   ELSE ROUND(
+                    	       (SUM(ISNULL(CAST(num_cred_mensual AS INT), 0)) * 100.0) / 
+                    	       SUM(ISNULL(CAST(denominador AS INT), 0)), 2
+                    	   )
+                    	END AS avance_cred_mensual,
+                    	-- ind vac
+                    	SUM(ISNULL(CAST(num_vac AS INT), 0)) AS num_vac,
+                    	CASE 
+                    	   WHEN SUM(ISNULL(CAST(denominador AS INT), 0)) = 0 THEN 0.0
+                    	   ELSE ROUND(
+                    	       (SUM(ISNULL(CAST(num_vac AS INT), 0)) * 100.0) / 
+                    	       SUM(ISNULL(CAST(denominador AS INT), 0)), 2
+                    	   )
+                    	END AS avance_vac,
+                    	-- vac antineumococica
+                    	SUM(ISNULL(CAST(num_vac_antineumococica AS INT), 0)) AS num_vac_antineumococica,
+                    	CASE 
+                    	   WHEN SUM(ISNULL(CAST(denominador AS INT), 0)) = 0 THEN 0.0
+                    	   ELSE ROUND(
+                    	       (SUM(ISNULL(CAST(num_vac_antineumococica AS INT), 0)) * 100.0) / 
+                    	       SUM(ISNULL(CAST(denominador AS INT), 0)), 2
+                    	   )
+                    	END AS avance_vac_antineumococica,
+                    	-- vac antipolio
+                    	SUM(ISNULL(CAST(num_vac_antipolio AS INT), 0)) AS num_vac_antipolio,
+                    	CASE 
+                    	   WHEN SUM(ISNULL(CAST(denominador AS INT), 0)) = 0 THEN 0.0
+                    	   ELSE ROUND(
+                    	       (SUM(ISNULL(CAST(num_vac_antipolio AS INT), 0)) * 100.0) / 
+                    	       SUM(ISNULL(CAST(denominador AS INT), 0)), 2
+                    	   )
+                    	END AS avance_vac_antipolio,
+                    	-- vac pentavalente
+                    	SUM(ISNULL(CAST(num_vac_pentavalente AS INT), 0)) AS num_vac_pentavalente,
+                    	CASE 
+                    	   WHEN SUM(ISNULL(CAST(denominador AS INT), 0)) = 0 THEN 0.0
+                    	   ELSE ROUND(
+                    	       (SUM(ISNULL(CAST(num_vac_pentavalente AS INT), 0)) * 100.0) / 
+                    	       SUM(ISNULL(CAST(denominador AS INT), 0)), 2
+                    	   )
+                    	END AS avance_vac_pentavalente,
+                    	-- vac rotavirus
+                    	SUM(ISNULL(CAST(num_vac_rotavirus AS INT), 0)) AS num_vac_rotavirus,
+                    	CASE 
+                    	   WHEN SUM(ISNULL(CAST(denominador AS INT), 0)) = 0 THEN 0.0
+                    	   ELSE ROUND(
+                    	       (SUM(ISNULL(CAST(num_vac_rotavirus AS INT), 0)) * 100.0) / 
+                    	       SUM(ISNULL(CAST(denominador AS INT), 0)), 2
+                    	   )
+                    	END AS avance_vac_rotavirus,
+                    	-- esq suplementacion 
+                    	SUM(ISNULL(CAST(num_esq AS INT), 0)) AS num_esq,
+                    	CASE 
+                    	   WHEN SUM(ISNULL(CAST(denominador AS INT), 0)) = 0 THEN 0.0
+                    	   ELSE ROUND(
+                    	       (SUM(ISNULL(CAST(num_esq AS INT), 0)) * 100.0) / 
+                    	       SUM(ISNULL(CAST(denominador AS INT), 0)), 2
+                    	   )
+                    	END AS avance_esq,
+                    	-- esq4M 
+                    	SUM(ISNULL(CAST(num_esq4M AS INT), 0)) AS num_esq4M,
+                    	CASE 
+                    	   WHEN SUM(ISNULL(CAST(denominador AS INT), 0)) = 0 THEN 0.0
+                    	   ELSE ROUND(
+                    	       (SUM(ISNULL(CAST(num_esq4M AS INT), 0)) * 100.0) / 
+                    	       SUM(ISNULL(CAST(denominador AS INT), 0)), 2
+                    	   )
+                    	END AS avance_esq4M,
+                    	-- esq6M
+                    	SUM(ISNULL(CAST(num_esq6M AS INT), 0)) AS num_esq6M,
+                    	CASE 
+                    	   WHEN SUM(ISNULL(CAST(denominador AS INT), 0)) = 0 THEN 0.0
+                    	   ELSE ROUND(
+                    	       (SUM(ISNULL(CAST(num_esq6M AS INT), 0)) * 100.0) / 
+                    	       SUM(ISNULL(CAST(denominador AS INT), 0)), 2
+                    	   )
+                    	END AS avance_esq6M,
+                    	-- num_esq6M_trat
+                    	SUM(ISNULL(CAST(num_esq6M_trat AS INT), 0)) AS num_esq6M_trat,
+                    	CASE 
+                    	   WHEN SUM(ISNULL(CAST(denominador AS INT), 0)) = 0 THEN 0.0
+                    	   ELSE ROUND(
+                    	       (SUM(ISNULL(CAST(num_esq6M_trat AS INT), 0)) * 100.0) / 
+                    	       SUM(ISNULL(CAST(denominador AS INT), 0)), 2
+                    	   )
+                    	END AS avance_esq6M_trat,
+                    	-- num_esq6M_multi
+                    	SUM(ISNULL(CAST(num_esq6M_multi AS INT), 0)) AS num_esq6M_multi,
+                    	CASE 
+                    	   WHEN SUM(ISNULL(CAST(denominador AS INT), 0)) = 0 THEN 0.0
+                    	   ELSE ROUND(
+                    	       (SUM(ISNULL(CAST(num_esq6M_multi AS INT), 0)) * 100.0) / 
+                    	       SUM(ISNULL(CAST(denominador AS INT), 0)), 2
+                    	   )
+                    	END AS avance_esq6M_multi,
+                    	-- num_dosaje_Hb
+                    	SUM(ISNULL(CAST(num_dosaje_Hb AS INT), 0)) AS num_dosaje_Hb,
+                    	CASE 
+                    	   WHEN SUM(ISNULL(CAST(denominador AS INT), 0)) = 0 THEN 0.0
+                    	   ELSE ROUND(
+                    	       (SUM(ISNULL(CAST(num_dosaje_Hb AS INT), 0)) * 100.0) / 
+                    	       SUM(ISNULL(CAST(denominador AS INT), 0)), 2
+                    	   )
+                    	END AS avance_num_dosaje_Hb,
+                    	-- num_DNIemision
+                    	SUM(ISNULL(CAST(num_DNIemision AS INT), 0)) AS num_DNIemision,
+                    	CASE 
+                    	   WHEN SUM(ISNULL(CAST(denominador AS INT), 0)) = 0 THEN 0.0
+                    	   ELSE ROUND(
+                    	       (SUM(ISNULL(CAST(num_DNIemision AS INT), 0)) * 100.0) / 
+                    	       SUM(ISNULL(CAST(denominador AS INT), 0)), 2
+                    	   )
+                    	END AS avance_DNIemision
+                    FROM 
+                        Compromiso_1.dbo.PAQUETE_COMPROMISO
+            '''
+            params = []
+            conditions = []
+            
+            # Agregar filtros de año
+            if anio:
+                conditions.append("año = %s")
+                params.append(anio)
+
+            # Agregar filtro de mes con BETWEEN
+            if mes_inicio and mes_fin:
+                conditions.append("mes BETWEEN %s AND %s")
+                params.append(mes_inicio)
+                params.append(mes_fin)
+            elif mes_inicio:
+                conditions.append("mes = %s")
+                params.append(mes_inicio)
+            
+            # Filtros de ubicación geográfica - usando LIKE para códigos de ubigeo
+            if provincia and provincia != '':
+                conditions.append("LEFT(ubigeo, 4) = %s")
+                params.append(provincia)
+                print(f"Filtro provincia aplicado: LEFT(Ubigeo, 4) = {provincia}")
+            
+            if distrito and distrito != '':
+                conditions.append("ubigeo = %s")
+                params.append(distrito)
+                print(f"Filtro distrito aplicado: Ubigeo = {distrito}")
+            
+            # Agregar WHERE solo si hay condiciones
+            if conditions:
+                sql_query += " WHERE " + " AND ".join(conditions)
+            
+            print(f"[QUERY] SQL: {sql_query.strip()}")
+            print(f"[QUERY] Parámetros: {params}")
+            
+            cursor.execute(sql_query, params)
+            resultados = cursor.fetchall()
+            column_names = [desc[0] for desc in cursor.description]
+            datos = [dict(zip(column_names, fila)) for fila in resultados]
+            
+            # Validar que siempre retorne un registro
+            if not datos:
+                datos = [{'num_cred': 0, 'den_variable': 0, 'avance_cred': 0.0}]
+                print(f"[QUERY] Sin datos encontrados, retornando valores por defecto")
+            else:
+                # Mostrar resultado en formato de matriz
+                print(f"[QUERY] Resultado: Num={datos[0]['num_cred']}, Den={datos[0]['den_variable']}, Avance={datos[0]['avance_cred']}%")
+                print_resultado_matriz(datos[0], provincia, distrito)
+                
+        return datos
+    except Exception as e:
+        print(f"[ERROR] Error al obtener el avance regional: {e}")
+        return []
+
+
+
 # RANKING GESTANTE
-def obtener_ranking_pn_poblacion(anio, mes, red, microred, establecimiento, provincia, distrito):
+def obtener_resumen_paquete_compromiso(anio, mes_inicio, mes_fin, provincia, distrito):
+    """
+    Obtiene un resumen detallado del paquete compromiso con información adicional
+    """
+    datos_base = obtener_avance_paquete_compromiso(anio, mes_inicio, mes_fin, provincia, distrito)
+    
+    if not datos_base:
+        return None
+    
+    resultado = datos_base[0]
+    num = resultado.get('num', 0)
+    den = resultado.get('den', 0)
+    avance = resultado.get('avance', 0.0)
+    
+    # Calcular métricas adicionales
+    brecha = den - num
+    porcentaje_brecha = (brecha / den * 100) if den > 0 else 0
+    
+    # Determinar clasificación
+    if avance >= 67:
+        clasificacion = "CUMPLE"
+        color = "success"
+        icono = "check-circle"
+    elif avance >= 33:
+        clasificacion = "EN PROCESO"
+        color = "warning"
+        icono = "clock"
+    else:
+        clasificacion = "EN RIESGO"
+        color = "danger"
+        icono = "exclamation-triangle"
+    
+    resumen = {
+        'numerador': num,
+        'denominador': den,
+        'avance': round(avance, 2),
+        'brecha': brecha,
+        'porcentaje_brecha': round(porcentaje_brecha, 2),
+        'clasificacion': clasificacion,
+        'color': color,
+        'icono': icono,
+        'ambito': 'NACIONAL' if not provincia else ('PROVINCIA' if not distrito else 'DISTRITO')
+    }
+    
+    print(f"[RESUMEN] {resumen}")
+    return resumen
+
+def obtener_ranking_paquete_compromiso(anio, mes, red, microred, establecimiento, provincia, distrito):
     with connection.cursor() as cursor:
         # Base query with aggregation
         sql_query = """
@@ -114,7 +454,7 @@ def obtener_ranking_pn_poblacion(anio, mes, red, microred, establecimiento, prov
         return result
 
 ## AVANCE REGIONAL
-def obtener_avance_regional_pn_poblacion():
+def obtener_avance_regional_paquete_compromiso():
     """
     Obtiene el avance regional de gestantes con anemia.
     Retorna una lista de diccionarios con las claves 'num', 'den' y 'cob'.
@@ -156,7 +496,7 @@ def obtener_avance_regional_pn_poblacion():
         return []
 
 ## AVANCE REGIONAL MENSUALIZADO
-def obtener_avance_regional_mensual_pn_poblacion(anio, mes, red, microred, establecimiento):
+def obtener_avance_regional_mensual_paquete_compromiso(anio, mes, red, microred, establecimiento):
     """
     Obtiene el avance regional de gestantes con anemia de manera mensualizada.
     Retorna una lista de diccionarios con las claves 'num', 'den' y 'cob' por meses.
@@ -359,7 +699,7 @@ def dictfetchall(cursor):
     columns = [col[0] for col in cursor.description]
     return [dict(zip(columns, row)) for row in cursor.fetchall()]
 
-def obtener_avance_cobertura_pn_poblacion(anio, mes, red_h, p_microredes_establec_h, p_establecimiento_h, provincia, distrito):
+def obtener_avance_cobertura_paquete_compromiso(anio, mes, red_h, p_microredes_establec_h, p_establecimiento_h, provincia, distrito):
     """
     Obtiene los datos de cobertura de población, agrupados por red, microred y establecimiento,
     con cálculos agregados y el porcentaje de cobertura para cada grupo.
@@ -452,7 +792,6 @@ def obtener_avance_cobertura_pn_poblacion(anio, mes, red_h, p_microredes_estable
     except Exception as e:
         print(f"Error al obtener el avance regional: {e}")
         return []
-
 
 def obtener_cobertura_por_edad(anio, mes, red_h, p_microredes_establec_h, p_establecimiento_h, provincia, distrito):
     """
@@ -754,8 +1093,7 @@ def obtener_cobertura_por_establecimiento(anio, mes, red_h, p_microredes_estable
         return []    
 
 ## REPORTES EN EXCEL EN SALUD
-
-def obtener_seguimiento_pn_poblacion_red(departamento, red, edad, cumple):
+def obtener_seguimiento_paquete_compromiso_red(departamento, red, edad, cumple):
     """
     Función para obtener datos del seguimiento del padrón nominal filtrados por ubicación, edad y cumplimiento.
     
@@ -832,7 +1170,7 @@ def obtener_seguimiento_pn_poblacion_red(departamento, red, edad, cumple):
         # Obtener los resultados
         return cursor.fetchall()
     
-def obtener_seguimiento_pn_poblacion_microred(departamento, red, microred, edad, cumple):
+def obtener_seguimiento_paquete_compromiso_microred(departamento, red, microred, edad, cumple):
     """
     Función para obtener datos del seguimiento del padrón nominal filtrados por ubicación, edad y cumplimiento.
     
@@ -911,7 +1249,7 @@ def obtener_seguimiento_pn_poblacion_microred(departamento, red, microred, edad,
         # Obtener los resultados
         return cursor.fetchall()
 
-def obtener_seguimiento_pn_poblacion_establecimiento(departamento, establecimiento, edad, cumple):
+def obtener_seguimiento_paquete_compromiso_establecimiento(departamento, establecimiento, edad, cumple):
     """
     Función para obtener datos del seguimiento del padrón nominal filtrados por ubicación, edad y cumplimiento.
     

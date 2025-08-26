@@ -1,0 +1,191 @@
+<!-- Card para mostrar numerador y denominador -->
+<script>
+  (function () {
+    function initChart() {
+      const container = document.getElementById("detalle-avance-variables-container");
+
+      if (!container) {
+        console.error("Contenedor no encontrado");
+        return;
+      }
+
+      console.log("Contenedor encontrado:", container);
+
+      function createCardHTML(title, num, den, avance) {
+        const brecha = den - num;
+
+        let clasificacion, colorClass, iconClass;
+        if (avance >= 67) {
+          clasificacion = "CUMPLE";
+          colorClass = "success";
+          iconClass = "check-circle";
+        } else if (avance >= 33) {
+          clasificacion = "PROCESO";
+          colorClass = "warning";
+          iconClass = "clock";
+        } else {
+          clasificacion = "RIESGO";
+          colorClass = "danger";
+          iconClass = "exclamation-triangle";
+        }
+
+        return `
+          <div class="col-lg-4 col-md-6 mb-3">
+            <div class="card border-${colorClass}">
+              <div class="card-header bg-${colorClass} text-white">
+                <h6 class="mb-0"><i class="fas fa-${iconClass} mr-2"></i>${title}</h6>
+              </div>
+              <div class="card-body p-2">
+                <div class="row text-center">
+                  <div class="col-4">
+                    <div class="border-right">
+                      <i class="fas fa-users text-success mb-1" style="font-size: 0.8rem;"></i>
+                      <h6 class="text-success mb-0" style="font-size: 0.8rem;">Den</h6>
+                      <h5 class="font-weight-bold mb-0">${den.toLocaleString()}</h5>
+                      <small class="text-muted">Meta</small>
+                    </div>
+                  </div>
+                  <div class="col-4">
+                    <div class="border-right">
+                      <i class="fas fa-rocket text-primary mb-1" style="font-size: 0.8rem;"></i>
+                      <h6 class="text-primary mb-0" style="font-size: 0.8rem;">Num</h6>
+                      <h5 class="font-weight-bold mb-0">${num.toLocaleString()}</h5>
+                      <small class="text-muted">Alcanzado</small>
+                    </div>
+                  </div>
+                  <div class="col-4">
+                    <i class="fas fa-percentage text-${colorClass} mb-1" style="font-size: 0.8rem;"></i>
+                    <h6 class="text-${colorClass} mb-0">Avance</h6>
+                    <h5 class="font-weight-bold mb-0">${avance.toFixed(1)}%</h5>
+                    <small class="text-${colorClass}">${clasificacion}</small>
+                  </div>
+                </div>
+                <hr class="my-2">
+                <div class="row text-center">
+                  <div class="col-12">
+                    <small class="text-muted">
+                      <i class="fas fa-minus-circle text-danger mr-1"></i>
+                      Brecha: <strong>${brecha.toLocaleString()}</strong> casos por atender
+                    </small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderAllCards(data) {
+        if (!container) {
+          console.error("Contenedor no encontrado");
+          return;
+        }
+
+        let allCardsHTML = '<div class="row">';
+
+        function extractValue(rawValue) {
+          if (rawValue == null) return null;
+          const value = Array.isArray(rawValue) ? rawValue[0] : rawValue;
+          if (value == null || value === "") return null;
+          return parseFloat(value);
+        }
+
+        const den_variable = extractValue(data.v_den_variable) || 0;
+
+        const variables = [
+            { title: 'CRED', num_key: 'v_num_cred', avance_key: 'v_avance_cred' },
+            { title: 'CRED RN', num_key: 'v_num_cred_rn', avance_key: 'v_avance_cred_rn' },
+            { title: 'CRED MENSUAL', num_key: 'v_num_cred_mensual', avance_key: 'v_avance_cred_mensual' },
+            { title: 'VACUNAS', num_key: 'v_num_vac', avance_key: 'v_avance_vac' },
+            { title: 'VAC. ANTINEUMOCÓCICA', num_key: 'v_num_vac_antineumococica', avance_key: 'v_avance_vac_antineumococica' },
+            { title: 'VAC. ANTIPOLIO', num_key: 'v_num_vac_antipolio', avance_key: 'v_avance_vac_antipolio' },
+            { title: 'VAC. PENTAVALENTE', num_key: 'v_num_vac_pentavalente', avance_key: 'v_avance_vac_pentavalente' },
+            { title: 'VAC. ROTAVIRUS', num_key: 'v_num_vac_rotavirus', avance_key: 'v_avance_vac_rotavirus' },
+            { title: 'ESQUEMA', num_key: 'v_num_esq', avance_key: 'v_avance_esq' },
+            { title: 'ESQUEMA 4M', num_key: 'v_num_esq4M', avance_key: 'v_avance_esq4M' },
+            { title: 'ESQUEMA 6M', num_key: 'v_num_esq6M', avance_key: 'v_avance_esq6M' },
+            { title: 'ESQUEMA 6M TRAT.', num_key: 'v_num_esq6M_trat', avance_key: 'v_avance_esq6M_trat' },
+            { title: 'ESQUEMA 6M MULTIV.', num_key: 'v_num_esq6M_multi', avance_key: 'v_avance_esq6M_multi' },
+            { title: 'DOSAJE HB', num_key: 'v_num_dosaje_Hb', avance_key: 'v_avance_num_dosaje_Hb' },
+            { title: 'EMISIÓN DNI', num_key: 'v_num_DNIemision', avance_key: 'v_avance_DNIemision' }
+        ];
+
+        if (den_variable > 0) {
+            variables.forEach(v => {
+                const num = extractValue(data[v.num_key]) || 0;
+                const avance = extractValue(data[v.avance_key]) || 0;
+                allCardsHTML += createCardHTML(v.title, num, den_variable, avance);
+            });
+            allCardsHTML += '</div>';
+            container.innerHTML = allCardsHTML;
+        } else {
+            container.innerHTML = '<div class="alert alert-info">No hay datos disponibles para el denominador.</div>';
+        }
+      }
+
+      function loadData(params) {
+        params = params || {};
+        const queryString = new URLSearchParams(params).toString();
+        const url =
+          "{% url 'index_paquete_compromiso' %}" +
+          (queryString ? "?" + queryString : "");
+
+        console.log("Cargando datos desde:", url);
+
+        fetch(url, {
+          headers: { "X-Requested-With": "XMLHttpRequest" },
+          cache: "no-cache",
+        })
+          .then(function (response) {
+            return response.json();
+          })
+          .then(function (data) {
+            console.log("Datos recibidos:", data);
+            if (data && !data.error) {
+                renderAllCards(data);
+            } else {
+              container.innerHTML =
+                '<div class="alert alert-info">No hay datos disponibles</div>';
+            }
+          })
+          .catch(function (error) {
+            console.error("Error:", error);
+            container.innerHTML =
+              '<div class="alert alert-danger">Error al cargar datos</div>';
+          });
+      }
+
+      // Cargar datos iniciales
+      loadData();
+
+      // Escuchar eventos del formulario
+      const form = document.querySelector("form");
+      if (form) {
+        form.addEventListener("submit", function (e) {
+          e.preventDefault();
+          console.log("Submit capturado");
+
+          const formData = new FormData(form);
+          const params = {};
+          for (const entry of formData.entries()) {
+            const key = entry[0];
+            const value = entry[1];
+            if (value) {
+              params[key] = value;
+            }
+          }
+
+          console.log("Parámetros:", params);
+          loadData(params);
+        });
+      }
+    }
+
+    // Inicializar cuando el DOM esté listo
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initChart);
+    } else {
+      initChart();
+    }
+  })();
+</script>
