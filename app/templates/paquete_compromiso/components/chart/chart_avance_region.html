@@ -11,18 +11,27 @@ window.renderChartAvanceRegion = function(data, params) {
         console.error('El contenedor para el velocímetro no fue encontrado.');
         return;
     }
-
-    let myChart = echarts.getInstanceByDom(container);
-    if (myChart) {
-        myChart.dispose();
-    }
     
     try {
         if (data && data.r_avance_resumen && Array.isArray(data.r_avance_resumen) && data.r_avance_resumen.length > 0) {
             const avance = data.r_avance_resumen[0] ? parseFloat(data.r_avance_resumen[0]) : 0;
             const valorGauge = avance / 100;
 
-            myChart = echarts.init(container);
+            const cardHTML = `
+                <div class="card">
+                    <div class="card-body text-center p-2">
+                        <div id="gauge-chart-div" style="height: 178px;"></div>
+                    </div>
+                </div>
+            `;
+            container.innerHTML = cardHTML;
+            const chartDiv = document.getElementById('gauge-chart-div');
+
+            let myChart = echarts.getInstanceByDom(chartDiv);
+            if (myChart) {
+                myChart.dispose();
+            }
+            myChart = echarts.init(chartDiv);
 
             const option = {
                 series: [{
@@ -78,12 +87,29 @@ window.renderChartAvanceRegion = function(data, params) {
                 }]
             };
             myChart.setOption(option);
+
         } else {
-            container.innerHTML = '<div class="alert alert-info text-center"><i class="fas fa-info-circle"></i> No hay datos para el velocímetro.</div>';
+            container.innerHTML = `
+                <div class="card">
+                    <div class="card-body d-flex align-items-center justify-content-center" style="height: 210px;">
+                        <div class="alert alert-info text-center m-0">
+                            <i class="fas fa-info-circle"></i>&nbsp;No hay datos.
+                        </div>
+                    </div>
+                </div>
+            `;
         }
     } catch (error) {
         console.error("Error al renderizar el velocímetro:", error);
-        container.innerHTML = '<div class="alert alert-danger text-center"><i class="fas fa-exclamation-triangle"></i> Error al cargar el velocímetro.</div>';
+        container.innerHTML = `
+            <div class="card">
+                <div class="card-body d-flex align-items-center justify-content-center" style="height: 210px;">
+                    <div class="alert alert-danger text-center m-0">
+                        <i class="fas fa-exclamation-triangle"></i>&nbsp;Error al cargar.
+                    </div>
+                </div>
+            </div>
+        `;
     }
 };
 </script>
