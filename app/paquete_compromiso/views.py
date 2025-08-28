@@ -7,7 +7,7 @@ from base.models import MAESTRO_HIS_ESTABLECIMIENTO, DimPeriodo, Actualizacion
 from django.db.models.functions import Substr
 import logging
 
-from .queries import (obtener_avance_paquete_compromiso, obtener_variables_paquete_compromiso, 
+from .queries import (obtener_avance_paquete_compromiso, obtener_variables_paquete_compromiso, obtener_avance_regional_mensual_paquete_compromiso,
                     obtener_avance_regional_mensual_paquete_compromiso, obtener_avance_cobertura_paquete_compromiso, obtener_cobertura_por_edad, 
                     obtener_cobertura_por_red, obtener_cobertura_por_microred, obtener_cobertura_por_establecimiento, 
                     obtener_seguimiento_paquete_compromiso_red, obtener_seguimiento_paquete_compromiso_microred, obtener_seguimiento_paquete_compromiso_establecimiento)
@@ -54,16 +54,6 @@ def BASE(request):
 ## COMPONENTES Y GRAFICOS 
 ############################
 def process_avance_por_region(resultados_avance_por_region):
-    """
-    Procesa los resultados del query de avance por región.
-    Garantiza que siempre retorne un registro válido.
-    
-    Args:
-        resultados_avance_por_region: Lista de diccionarios con keys: num, den, avance
-    
-    Returns:
-        Dict con arrays r_numerador_resumen, r_denominador_resumen, r_avance_resumen (cada uno con un elemento)
-    """
     data = {    
         'r_numerador_resumen': [],
         'r_denominador_resumen': [],
@@ -75,7 +65,7 @@ def process_avance_por_region(resultados_avance_por_region):
         data['r_numerador_resumen'] = [0]
         data['r_denominador_resumen'] = [0]
         data['r_avance_resumen'] = [0.0]
-        print(f"[PROCESS] Sin datos de entrada, usando valores por defecto: {data}")
+        #print(f"[PROCESS] Sin datos de entrada, usando valores por defecto: {data}")
         return data
     
     # Procesar el primer (y único) registro
@@ -95,7 +85,7 @@ def process_avance_por_region(resultados_avance_por_region):
         data['r_denominador_resumen'].append(int(denominador))
         data['r_avance_resumen'].append(float(avance))
         
-        print(f"[PROCESS] Datos procesados: Num={numerador}, Den={denominador}, Avance={avance}%")
+        #print(f"[PROCESS] Datos procesados: Num={numerador}, Den={denominador}, Avance={avance}%")
         
     except (KeyError, ValueError, TypeError) as e:
         logger.error(f"Error procesando datos: {e}, Row: {row}")
@@ -104,7 +94,7 @@ def process_avance_por_region(resultados_avance_por_region):
         data['r_denominador_resumen'] = [0]
         data['r_avance_resumen'] = [0.0]
     
-    print(f"[PROCESS] Resultado final: {data}")
+    #print(f"[PROCESS] Resultado final: {data}")
     return data
 
 def process_variables_por_region(resultados_variables_por_region):
@@ -314,7 +304,7 @@ def process_variables_por_region(resultados_variables_por_region):
         data['v_num_DNIemision'] = [0]
         data['v_avance_DNIemision'] = [0.0]
 
-    print(f"[PROCESS] Resultado final: {data}")
+    #print(f"[PROCESS] Resultado final: {data}")
     return data
 
 def process_avance_regional_mensual_paquete_compromiso(resultados_avance_regional_mensual_paquete_compromiso):
@@ -443,6 +433,7 @@ def process_avance_regional_mensual_paquete_compromiso(resultados_avance_regiona
             logger.error(f"Error procesando la fila {index}: {str(e)}")
     return data
 
+##----------------------------
 def process_avance_cobertura_paquete_compromiso(resultados_avance_cobertura_paquete_compromiso):
     """Procesa los resultados del graficos"""
     data = {
@@ -625,29 +616,25 @@ def index_paquete_compromiso(request):
 
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         try:
-            print(f"Parámetros recibidos - Año: {anio}, Mes inicio: {mes_seleccionado_inicio}, Mes fin: {mes_seleccionado_fin}, Provincia: {provincia_seleccionada}, Distrito: {distrito_seleccionado}")
+            # Unificar la lógica de obtención de datos
+            #print(f"Parámetros recibidos - Año: {anio}, Mes inicio: {mes_seleccionado_inicio}, Mes fin: {mes_seleccionado_fin}, Provincia: {provincia_seleccionada}, Distrito: {distrito_seleccionado}")
+            
+            # Lógica para la sección de avance regional
             resultados_avance_por_region = obtener_avance_paquete_compromiso(anio, mes_seleccionado_inicio, mes_seleccionado_fin, provincia_seleccionada, distrito_seleccionado)
-            resultados_variables_por_region = obtener_variables_paquete_compromiso(anio, mes_seleccionado_inicio, mes_seleccionado_fin, provincia_seleccionada, distrito_seleccionado)
+            resultados_variables_por_region = obtener_variables_paquete_compromiso(anio, mes_seleccionado_inicio, mes_seleccionado_fin, provincia_seleccionada, distrito_seleccionado)           
+            resultados_avance_regional_mensual_paquete_compromiso = obtener_avance_regional_mensual_paquete_compromiso(anio, mes_seleccionado_inicio, mes_seleccionado_fin, provincia_seleccionada, distrito_seleccionado) 
             
-            
-            
-            resultados_avance_regional_mensual_paquete_compromiso = obtener_avance_regional_mensual_paquete_compromiso(anio, mes, red_seleccionada, microred_seleccionada, establecimiento_seleccionado)
+            # Lógica para la sección de cobertura
             resultados_avance_cobertura_paquete_compromiso = obtener_avance_cobertura_paquete_compromiso(anio, mes, red_seleccionada, microred_seleccionada, establecimiento_seleccionado, provincia, distrito)
             resultados_cobertura_por_edad = obtener_cobertura_por_edad(anio, mes, red_seleccionada, microred_seleccionada, establecimiento_seleccionado, provincia, distrito)
             resultados_cobertura_por_red = obtener_cobertura_por_red(anio, mes, red_seleccionada, microred_seleccionada, establecimiento_seleccionado, provincia, distrito)
             resultados_cobertura_por_microred = obtener_cobertura_por_microred(anio, mes, red_seleccionada, microred_seleccionada, establecimiento_seleccionado, provincia, distrito)
             resultados_cobertura_por_establecimiento = obtener_cobertura_por_establecimiento(anio, mes, red_seleccionada, microred_seleccionada, establecimiento_seleccionado, provincia, distrito)
-            print("resultados_avance_por_region:", resultados_avance_por_region)
             
-            # Check for empty results and handle them
-            if not resultados_avance_regional_mensual_paquete_compromiso:
-                # You can return a specific message or an empty structure
-                return JsonResponse({'error': 'No se encontraron datos para el ranking.'}, status=404)
-
+            # Combinar todos los resultados en un solo diccionario
             data = {
                 **process_avance_por_region(resultados_avance_por_region),
                 **process_variables_por_region(resultados_variables_por_region),
-                
                 **process_avance_regional_mensual_paquete_compromiso(resultados_avance_regional_mensual_paquete_compromiso),
                 **process_avance_cobertura_paquete_compromiso(resultados_avance_cobertura_paquete_compromiso),
                 **process_cobertura_por_edad(resultados_cobertura_por_edad),
@@ -656,14 +643,13 @@ def index_paquete_compromiso(request):
                 **process_cobertura_por_establecimiento(resultados_cobertura_por_establecimiento)
             }
 
-            logger.info(f"Datos enviados como JSON: {data}")
             return JsonResponse(data)
 
         except Exception as e:
             logger.error(f"Error al obtener datos: {str(e)}")
-            # Devolver una respuesta JSON con detalles del error
-            return JsonResponse({'error': f"Error al obtener datos: {str(e)}"}, status=500)  # Incluye el error en la respuesta
+            return JsonResponse({'error': f"Error al obtener datos: {str(e)}"}, status=500)
 
+    # Renderizado inicial de la página
     return render(request, 'paquete_compromiso/index_paquete_compromiso.html', {
         'mes_seleccionado_inicio': mes_seleccionado_inicio,
         'mes_seleccionado_fin': mes_seleccionado_fin,

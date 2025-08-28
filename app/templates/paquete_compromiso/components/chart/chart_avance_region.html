@@ -1,246 +1,89 @@
 <!-- Card para mostrar gráficos por edades -->
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    // Verificar que ECharts esté cargado
+window.renderChartAvanceRegion = function(data, params) {
     if (typeof echarts === "undefined") {
-      console.error(
-        "ECharts no está cargado. Verifica que el script CDN esté funcionando."
-      );
-      return;
+        console.error("ECharts no está cargado.");
+        return;
     }
 
     const container = document.getElementById("detalle-avance-container");
-    const filtroForm = document.querySelector("form");
-    let myChart = null; // Variable para mantener referencia del gráfico
-
-    function obtenerEtiquetaGrado(value) {
-      return ""; // No mostrar título
+    if (!container) {
+        console.error('El contenedor para el velocímetro no fue encontrado.');
+        return;
     }
 
-    function cargarDatosCobertura(params = {}) {
-      const queryString = new URLSearchParams(params).toString();
-      fetch(`{% url "index_paquete_compromiso" %}?${queryString}`, {
-        headers: { "X-Requested-With": "XMLHttpRequest" },
-      })
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error("Error en la respuesta del servidor");
-          }
-          return response.json();
-        })
-        .then((data) => {
-          console.log("Datos recibidos:", data);
-          console.log(
-            "Tipo de r_numerador:",
-            typeof data.r_numerador,
-            "Es array:",
-            Array.isArray(data.r_numerador)
-          );
-          console.log(
-            "Tipo de r_avance:",
-            typeof data.r_avance,
-            "Es array:",
-            Array.isArray(data.r_avance)
-          );
-          console.log(
-            "Longitud r_numerador:",
-            data.r_numerador ? data.r_numerador.length : "undefined"
-          );
-          console.log(
-            "Longitud r_avance:",
-            data.r_avance ? data.r_avance.length : "undefined"
-          );
+    let myChart = echarts.getInstanceByDom(container);
+    if (myChart) {
+        myChart.dispose();
+    }
+    
+    try {
+        if (data && data.r_avance_resumen && Array.isArray(data.r_avance_resumen) && data.r_avance_resumen.length > 0) {
+            const avance = data.r_avance_resumen[0] ? parseFloat(data.r_avance_resumen[0]) : 0;
+            const valorGauge = avance / 100;
 
-          if (!container) {
-            console.error(
-              'El elemento contenedor "detalle-avance-container" no fue encontrado.'
-            );
-            return;
-          }
+            myChart = echarts.init(container);
 
-          if (
-            data &&
-            data.r_avance_resumen &&
-            Array.isArray(data.r_avance_resumen) &&
-            data.r_avance_resumen.length > 0
-          ) {
-            // Se espera una sola fila de datos, se toma el primer elemento.
-            const avance = data.r_avance_resumen[0]
-              ? parseFloat(data.r_avance_resumen[0])
-              : 0;
-            const numerador =
-              (data.r_numerador_resumen && data.r_numerador_resumen[0]) || 0;
-            const denominador =
-              (data.r_denominador_resumen && data.r_denominador_resumen[0]) ||
-              0;
-            const valorGauge = avance / 100; // Convertir porcentaje a escala 0-1
-
-            console.log(
-              `Datos procesados - Avance: ${avance}, Numerador: ${numerador}, Denominador: ${denominador}, ValorGauge: ${valorGauge}`
-            );
-
-            const cardHTML = `
-              <div class="col-12 mb-3 d-flex justify-content-center">
-                <div class="card" style="width: 100%; max-width: 280px;">
-                  <div class="card-body text-center py-2">
-                    <div id="gauge-total" style="width: 100%; height: 178px;"></div>
-                  </div>
-                </div>
-              </div>
-            `;
-            container.innerHTML = cardHTML;
-
-            // Esperar un momento para que el DOM se actualice antes de inicializar los gráficos
-            setTimeout(() => {
-              const chartDom = document.getElementById("gauge-total");
-
-              if (!chartDom) {
-                console.error("No se encontró el elemento gauge-total");
-                return;
-              }
-
-              // Limpiar gráfico anterior si existe
-              if (myChart) {
-                myChart.dispose();
-                myChart = null;
-              }
-
-              console.log(`Inicializando gráfico con valor: ${valorGauge}`);
-              myChart = echarts.init(chartDom);
-              const option = {
-                title: {
-                  show: false,
-                },
-                series: [
-                  {
-                    type: "gauge",
+            const option = {
+                series: [{
+                    type: 'gauge',
                     startAngle: 180,
                     endAngle: 0,
-                    center: ["50%", "75%"],
-                    radius: "90%",
+                    center: ['50%', '75%'],
+                    radius: '90%',
                     min: 0,
                     max: 1,
                     splitNumber: 6,
                     axisLine: {
-                      lineStyle: {
-                        width: 2,
-                        color: [
-                          [0.33, "#FF6B6B"],
-                          [0.67, "#FFD93D"],
-                          [1, "#6BCF7F"],
-                        ],
-                      },
+                        lineStyle: {
+                            width: 2,
+                            color: [
+                                [0.33, '#FF6B6B'],
+                                [0.67, '#FFD93D'],
+                                [1, '#6BCF7F']
+                            ]
+                        }
                     },
                     pointer: {
-                      icon: "path://M12.8,0.7l12,40.1H0.7L12.8,0.7z",
-                      length: "12%",
-                      width: 10,
-                      offsetCenter: [0, "-60%"],
-                      itemStyle: {
-                        color: "auto",
-                      },
+                        icon: 'path://M12.8,0.7l12,40.1H0.7L12.8,0.7z',
+                        length: '12%',
+                        width: 10,
+                        offsetCenter: [0, '-60%'],
+                        itemStyle: { color: 'auto' }
                     },
-                    axisTick: {
-                      length: 6,
-                      lineStyle: {
-                        color: "auto",
-                        width: 2,
-                      },
-                    },
-                    splitLine: {
-                      length: 10,
-                      lineStyle: {
-                        color: "auto",
-                        width: 5,
-                      },
-                    },
+                    axisTick: { length: 6, lineStyle: { color: 'auto', width: 2 } },
+                    splitLine: { length: 10, lineStyle: { color: 'auto', width: 5 } },
                     axisLabel: {
-                      color: "#464646",
-                      fontSize: 10,
-                      distance: -40,
-                      rotate: "tangential",
-                      formatter: function (value) {
-                        if (Math.abs(value - 0.17) < 0.01) {
-                          return "Riesgo";
-                        } else if (Math.abs(value - 0.5) < 0.01) {
-                          return "Progreso";
-                        } else if (Math.abs(value - 0.83) < 0.01) {
-                          return "Cumple";
+                        color: '#464646',
+                        fontSize: 10,
+                        distance: -40,
+                        rotate: 'tangential',
+                        formatter: function (value) {
+                            if (Math.abs(value - 0.17) < 0.01) return 'Riesgo';
+                            if (Math.abs(value - 0.5) < 0.01) return 'Progreso';
+                            if (Math.abs(value - 0.83) < 0.01) return 'Cumple';
+                            return '';
                         }
-                        return "";
-                      },
                     },
-
                     detail: {
-                      fontSize: 20,
-                      offsetCenter: [0, "-35%"],
-                      valueAnimation: true,
-                      formatter: function (value) {
-                        return Math.round(value * 100) + "%";
-                      },
-                      color: "inherit",
+                        fontSize: 20,
+                        offsetCenter: [0, '-35%'],
+                        valueAnimation: true,
+                        formatter: function (value) {
+                            return Math.round(value * 100) + '%';
+                        },
+                        color: 'inherit'
                     },
-                    data: [
-                      {
-                        value: valorGauge,
-                        name: "",
-                      },
-                    ],
-                  },
-                ],
-              };
-              myChart.setOption(option);
-
-              // Redimensionar el gráfico para asegurar que se muestre correctamente
-              myChart.resize();
-
-              // Forzar actualización del gráfico
-              window.addEventListener("resize", function () {
-                if (myChart) {
-                  myChart.resize();
-                }
-              });
-            }, 100); // Esperar 100ms para que el DOM se actualice
-          } else {
-            // Limpiar gráfico si no hay datos
-            if (myChart) {
-              myChart.dispose();
-              myChart = null;
-            }
-            container.innerHTML =
-              '<div class="alert alert-info text-center"><i class="fas fa-info-circle"></i> No se encontraron datos de avance para mostrar velocimetro</div>';
-          }
-        })
-        .catch((error) => {
-          console.error("Error al cargar los datos:", error);
-          // Limpiar gráfico en caso de error
-          if (myChart) {
-            myChart.dispose();
-            myChart = null;
-          }
-          if (container) {
-            container.innerHTML =
-              '<div class="alert alert-danger text-center"><i class="fas fa-exclamation-triangle"></i> Ocurrió un error al cargar los datos de avance.</div>';
-          }
-        });
-    }
-
-    if (filtroForm) {
-      filtroForm.addEventListener("submit", function (e) {
-        e.preventDefault();
-        const formData = new FormData(filtroForm);
-        const params = {};
-        for (const [key, value] of formData.entries()) {
-          if (value) {
-            params[key] = value;
-          }
+                    data: [{ value: valorGauge, name: '' }]
+                }]
+            };
+            myChart.setOption(option);
+        } else {
+            container.innerHTML = '<div class="alert alert-info text-center"><i class="fas fa-info-circle"></i> No hay datos para el velocímetro.</div>';
         }
-        console.log("Parámetros enviados desde el formulario:", params);
-        cargarDatosCobertura(params);
-      });
-      filtroForm.dispatchEvent(new Event("submit"));
-    } else {
-      cargarDatosCobertura();
+    } catch (error) {
+        console.error("Error al renderizar el velocímetro:", error);
+        container.innerHTML = '<div class="alert alert-danger text-center"><i class="fas fa-exclamation-triangle"></i> Error al cargar el velocímetro.</div>';
     }
-  });
+};
 </script>

@@ -11,24 +11,11 @@ def obtener_distritos(provincia):
     distritos = MAESTRO_HIS_ESTABLECIMIENTO.objects.filter(Provincia=provincia).values('Distrito').distinct().order_by('Distrito')
     return list(distritos)
 
+## VELOCIMETRO DETALLADOS
 def obtener_avance_paquete_compromiso(anio, mes_inicio, mes_fin, provincia, distrito):
-    """
-    Obtiene el avance agregado del paquete compromiso con filtros opcionales.
-    Retorna un solo registro con la suma total de numerador, denominador y avance calculado.
-    
-    Args:
-        anio: Año de consulta
-        mes_inicio: Mes de inicio del rango
-        mes_fin: Mes final del rango
-        provincia: Código de provincia (4 dígitos)
-        distrito: Código de distrito (6 dígitos)
-    
-    Returns:
-        Lista con un diccionario conteniendo: num, den, avance
-    """
     try:
         with connection.cursor() as cursor:
-            print(f"[QUERY] Parámetros - Año: {anio}, Mes: {mes_inicio}-{mes_fin}, Provincia: {provincia}, Distrito: {distrito}")
+            #print(f"[QUERY] Parámetros - Año: {anio}, Mes: {mes_inicio}-{mes_fin}, Provincia: {provincia}, Distrito: {distrito}")
             
             sql_query = '''
                 SELECT 
@@ -65,105 +52,44 @@ def obtener_avance_paquete_compromiso(anio, mes_inicio, mes_fin, provincia, dist
             if provincia and provincia != '':
                 conditions.append("LEFT(ubigeo, 4) = %s")
                 params.append(provincia)
-                print(f"Filtro provincia aplicado: LEFT(Ubigeo, 4) = {provincia}")
+                #print(f"Filtro provincia aplicado: LEFT(Ubigeo, 4) = {provincia}")
             
             if distrito and distrito != '':
                 conditions.append("ubigeo = %s")
                 params.append(distrito)
-                print(f"Filtro distrito aplicado: Ubigeo = {distrito}")
+                #print(f"Filtro distrito aplicado: Ubigeo = {distrito}")
             
             # Agregar WHERE solo si hay condiciones
             if conditions:
                 sql_query += " WHERE " + " AND ".join(conditions)
             
-            print(f"[QUERY] SQL: {sql_query.strip()}")
-            print(f"[QUERY] Parámetros: {params}")
+            #print(f"[QUERY] SQL: {sql_query.strip()}")
+            #print(f"[QUERY] Parámetros: {params}")
             
             cursor.execute(sql_query, params)
             resultados = cursor.fetchall()
             column_names = [desc[0] for desc in cursor.description]
             datos = [dict(zip(column_names, fila)) for fila in resultados]
             
-            # Validar que siempre retorne un registro
-            if not datos:
-                datos = [{'num': 0, 'den': 0, 'avance': 0.0}]
-                print(f"[QUERY] Sin datos encontrados, retornando valores por defecto")
-            else:
-                # Mostrar resultado en formato de matriz
-                print(f"[QUERY] Resultado: Num={datos[0]['num']}, Den={datos[0]['den']}, Avance={datos[0]['avance']}%")
-                print_resultado_matriz(datos[0], provincia, distrito)
                 
         return datos
     except Exception as e:
         print(f"[ERROR] Error al obtener el avance regional: {e}")
         return []
 
-def print_resultado_matriz(resultado, provincia=None, distrito=None):
-    """
-    Imprime el resultado en formato de matriz para mejor visualización
-    """
-    num = resultado.get('num', 0)
-    den = resultado.get('den', 0)
-    avance = resultado.get('avance', 0.0)
-    
-    # Determinar el ámbito geográfico
-    ambito = "NACIONAL"
-    if provincia and distrito:
-        ambito = f"DISTRITO ({distrito})"
-    elif provincia:
-        ambito = f"PROVINCIA ({provincia})"
-    
-    print("\n" + "="*60)
-    print("           RESUMEN PAQUETE COMPROMISO")
-    print("="*60)
-    print(f"ÁMBITO GEOGRÁFICO: {ambito}")
-    print("-"*60)
-    print(f"{'INDICADOR':<25} {'VALOR':<15} {'DESCRIPCIÓN':<20}")
-    print("-"*60)
-    print(f"{'Numerador':<25} {num:<15,} {'Cantidad alcanzada':<20}")
-    print(f"{'Denominador':<25} {den:<15,} {'Meta establecida':<20}")
-    print(f"{'Avance (%)':<25} {avance:<15.2f} {'Porcentaje logrado':<20}")
-    print("-"*60)
-    
-    # Clasificación del avance
-    if avance >= 67:
-        clasificacion = "CUMPLE (≥67%)"
-        estado = "✅"
-    elif avance >= 33:
-        clasificacion = "EN PROCESO (33-66%)"
-        estado = "⚠️"
-    else:
-        clasificacion = "EN RIESGO (<33%)"
-        estado = "❌"
-    
-    print(f"{'Estado':<25} {estado} {clasificacion}")
-    print("="*60 + "\n")
 
+## VARIABLES DETALLADOS
 def obtener_variables_paquete_compromiso(anio, mes_inicio, mes_fin, provincia, distrito):
-    """
-    Obtiene el avance agregado del paquete compromiso con filtros opcionales.
-    Retorna un solo registro con la suma total de numerador, denominador y avance calculado.
-    
-    Args:
-        anio: Año de consulta
-        mes_inicio: Mes de inicio del rango
-        mes_fin: Mes final del rango
-        provincia: Código de provincia (4 dígitos)
-        distrito: Código de distrito (6 dígitos)
-    
-    Returns:
-        Lista con un diccionario conteniendo: num, den, avance
-    """
     try:
         with connection.cursor() as cursor:
-            print(f"[QUERY] Parámetros - Año: {anio}, Mes: {mes_inicio}-{mes_fin}, Provincia: {provincia}, Distrito: {distrito}")
+            #print(f"[QUERY] Parámetros - Año: {anio}, Mes: {mes_inicio}-{mes_fin}, Provincia: {provincia}, Distrito: {distrito}")
             
             sql_query = '''
                     SELECT 
-                    	-- ind cred
-                    	SUM(ISNULL(CAST(denominador AS INT), 0)) AS den_variable,
-                    	SUM(ISNULL(CAST(num_cred AS INT), 0)) AS num_cred,
-                    		CASE 
+                        -- ind cred
+                        SUM(ISNULL(CAST(denominador AS INT), 0)) AS den_variable,
+                        SUM(ISNULL(CAST(num_cred AS INT), 0)) AS num_cred,
+                    	    CASE 
                     	    WHEN SUM(ISNULL(CAST(denominador AS INT), 0)) = 0 THEN 0.0
                     	    ELSE ROUND(
                     	        (SUM(ISNULL(CAST(num_cred AS INT), 0)) * 100.0) / 
@@ -320,40 +246,230 @@ def obtener_variables_paquete_compromiso(anio, mes_inicio, mes_fin, provincia, d
             if provincia and provincia != '':
                 conditions.append("LEFT(ubigeo, 4) = %s")
                 params.append(provincia)
-                print(f"Filtro provincia aplicado: LEFT(Ubigeo, 4) = {provincia}")
+            #    print(f"Filtro provincia aplicado: LEFT(Ubigeo, 4) = {provincia}")
             
             if distrito and distrito != '':
                 conditions.append("ubigeo = %s")
                 params.append(distrito)
-                print(f"Filtro distrito aplicado: Ubigeo = {distrito}")
+            #    print(f"Filtro distrito aplicado: Ubigeo = {distrito}")
             
             # Agregar WHERE solo si hay condiciones
             if conditions:
                 sql_query += " WHERE " + " AND ".join(conditions)
             
-            print(f"[QUERY] SQL: {sql_query.strip()}")
-            print(f"[QUERY] Parámetros: {params}")
+            #print(f"[QUERY] SQL: {sql_query.strip()}")
+            #print(f"[QUERY] Parámetros: {params}")
             
             cursor.execute(sql_query, params)
             resultados = cursor.fetchall()
             column_names = [desc[0] for desc in cursor.description]
             datos = [dict(zip(column_names, fila)) for fila in resultados]
             
-            # Validar que siempre retorne un registro
-            if not datos:
-                datos = [{'num_cred': 0, 'den_variable': 0, 'avance_cred': 0.0}]
-                print(f"[QUERY] Sin datos encontrados, retornando valores por defecto")
-            else:
-                # Mostrar resultado en formato de matriz
-                print(f"[QUERY] Resultado: Num={datos[0]['num_cred']}, Den={datos[0]['den_variable']}, Avance={datos[0]['avance_cred']}%")
-                print_resultado_matriz(datos[0], provincia, distrito)
                 
         return datos
     except Exception as e:
-        print(f"[ERROR] Error al obtener el avance regional: {e}")
+        #print(f"[ERROR] Error al obtener el avance regional: {e}")
         return []
 
+## AVANCE REGIONAL MENSUALIZADO
+def obtener_avance_regional_mensual_paquete_compromiso(anio, mes_inicio, mes_fin, provincia, distrito):
+    try:
+        with connection.cursor() as cursor:
+            sql_query = '''
+                    SELECT
+                        -- ENERO
+                        SUM(CASE WHEN mes = 1 THEN CAST(numerador AS INT) ELSE 0 END) AS num_1,
+                        SUM(CASE WHEN mes = 1 THEN CAST(denominador AS INT) ELSE 0 END) AS den_1,
+                        CASE
+                            WHEN SUM(CASE WHEN mes = 1 THEN CAST(denominador AS INT) ELSE 0 END) = 0
+                            THEN 0
+                            ELSE ROUND(
+                                (
+                                    SUM(CASE WHEN mes = 1 THEN CAST(numerador AS INT) ELSE 0 END) * 1.0
+                                    / NULLIF(SUM(CASE WHEN mes = 1 THEN CAST(denominador AS INT) ELSE 0 END), 0)
+                                ) * 100
+                            , 2)
+                        END AS cob_1,
+                        -- FEBRERO
+                        SUM(CASE WHEN mes = 2 THEN CAST(numerador AS INT) ELSE 0 END) AS num_2,
+                        SUM(CASE WHEN mes = 2 THEN CAST(denominador AS INT) ELSE 0 END) AS den_2,
+                        CASE
+                            WHEN SUM(CASE WHEN mes = 2 THEN CAST(denominador AS INT) ELSE 0 END) = 0
+                            THEN 0
+                            ELSE ROUND(
+                                (
+                                    SUM(CASE WHEN mes = 2 THEN CAST(numerador AS INT) ELSE 0 END) * 1.0
+                                    / NULLIF(SUM(CASE WHEN mes = 2 THEN CAST(denominador AS INT) ELSE 0 END), 0)
+                                ) * 100
+                            , 2)
+                        END AS cob_2,
+                        -- MARZO
+                        SUM(CASE WHEN mes = 3 THEN CAST(numerador AS INT) ELSE 0 END) AS num_3,
+                        SUM(CASE WHEN mes = 3 THEN CAST(denominador AS INT) ELSE 0 END) AS den_3,
+                        CASE
+                            WHEN SUM(CASE WHEN mes = 3 THEN CAST(denominador AS INT) ELSE 0 END) = 0
+                            THEN 0
+                            ELSE ROUND(
+                                (
+                                    SUM(CASE WHEN mes = 3 THEN CAST(numerador AS INT) ELSE 0 END) * 1.0
+                                    / NULLIF(SUM(CASE WHEN mes = 3 THEN CAST(denominador AS INT) ELSE 0 END), 0)
+                                ) * 100
+                            , 2)
+                        END AS cob_3,
+                        -- ABRIL
+                        SUM(CASE WHEN mes = 4 THEN CAST(numerador AS INT) ELSE 0 END) AS num_4,
+                        SUM(CASE WHEN mes = 4 THEN CAST(denominador AS INT) ELSE 0 END) AS den_4,
+                        CASE
+                            WHEN SUM(CASE WHEN mes = 4 THEN CAST(denominador AS INT) ELSE 0 END) = 0
+                            THEN 0
+                            ELSE ROUND(
+                                (
+                                    SUM(CASE WHEN mes = 4 THEN CAST(numerador AS INT) ELSE 0 END) * 1.0
+                                    / NULLIF(SUM(CASE WHEN mes = 4 THEN CAST(denominador AS INT) ELSE 0 END), 0)
+                                ) * 100
+                            , 2)
+                        END AS cob_4,
+                        -- MAYO
+                        SUM(CASE WHEN mes = 5 THEN CAST(numerador AS INT) ELSE 0 END) AS num_5,
+                        SUM(CASE WHEN mes = 5 THEN CAST(denominador AS INT) ELSE 0 END) AS den_5,
+                        CASE
+                            WHEN SUM(CASE WHEN mes = 5 THEN CAST(denominador AS INT) ELSE 0 END) = 0
+                            THEN 0
+                            ELSE ROUND(
+                                (
+                                    SUM(CASE WHEN mes = 5 THEN CAST(numerador AS INT) ELSE 0 END) * 1.0
+                                    / NULLIF(SUM(CASE WHEN mes = 5 THEN CAST(denominador AS INT) ELSE 0 END), 0)
+                                ) * 100
+                            , 2)
+                        END AS cob_5,
+                        -- JUNIO
+                        SUM(CASE WHEN mes = 6 THEN CAST(numerador AS INT) ELSE 0 END) AS num_6,
+                        SUM(CASE WHEN mes = 6 THEN CAST(denominador AS INT) ELSE 0 END) AS den_6,
+                        CASE
+                            WHEN SUM(CASE WHEN mes = 6 THEN CAST(denominador AS INT) ELSE 0 END) = 0
+                            THEN 0
+                            ELSE ROUND(
+                                (
+                                    SUM(CASE WHEN mes = 6 THEN CAST(numerador AS INT) ELSE 0 END) * 1.0
+                                    / NULLIF(SUM(CASE WHEN mes = 6 THEN CAST(denominador AS INT) ELSE 0 END), 0)
+                                ) * 100
+                            , 2)
+                        END AS cob_6,
+                        -- JULIO
+                        SUM(CASE WHEN mes = 7 THEN CAST(numerador AS INT) ELSE 0 END) AS num_7,
+                        SUM(CASE WHEN mes = 7 THEN CAST(denominador AS INT) ELSE 0 END) AS den_7,
+                        CASE
+                            WHEN SUM(CASE WHEN mes = 7 THEN CAST(denominador AS INT) ELSE 0 END) = 0
+                            THEN 0
+                            ELSE ROUND(
+                                (
+                                    SUM(CASE WHEN mes = 7 THEN CAST(numerador AS INT) ELSE 0 END) * 1.0
+                                    / NULLIF(SUM(CASE WHEN mes = 7 THEN CAST(denominador AS INT) ELSE 0 END), 0)
+                                ) * 100
+                            , 2)
+                        END AS cob_7,
+                        -- AGOSTO
+                        SUM(CASE WHEN mes = 8 THEN CAST(numerador AS INT) ELSE 0 END) AS num_8,
+                        SUM(CASE WHEN mes = 8 THEN CAST(denominador AS INT) ELSE 0 END) AS den_8,
+                        CASE
+                            WHEN SUM(CASE WHEN mes = 8 THEN CAST(denominador AS INT) ELSE 0 END) = 0
+                            THEN 0
+                            ELSE ROUND(
+                                (
+                                    SUM(CASE WHEN mes = 8 THEN CAST(numerador AS INT) ELSE 0 END) * 1.0
+                                    / NULLIF(SUM(CASE WHEN mes = 8 THEN CAST(denominador AS INT) ELSE 0 END), 0)
+                                ) * 100
+                            , 2)
+                        END AS cob_8,
+                        -- SETIEMBRE
+                        SUM(CASE WHEN mes = 9 THEN CAST(numerador AS INT) ELSE 0 END) AS num_9,
+                        SUM(CASE WHEN mes = 9 THEN CAST(denominador AS INT) ELSE 0 END) AS den_9,
+                        CASE
+                            WHEN SUM(CASE WHEN mes = 9 THEN CAST(denominador AS INT) ELSE 0 END) = 0
+                            THEN 0
+                            ELSE ROUND(
+                                (
+                                    SUM(CASE WHEN mes = 9 THEN CAST(numerador AS INT) ELSE 0 END) * 1.0
+                                    / NULLIF(SUM(CASE WHEN mes = 9 THEN CAST(denominador AS INT) ELSE 0 END), 0)
+                                ) * 100
+                            , 2)
+                        END AS cob_9,
+                        -- OCTUBRE
+                        SUM(CASE WHEN mes = 10 THEN CAST(numerador AS INT) ELSE 0 END) AS num_10,
+                        SUM(CASE WHEN mes = 10 THEN CAST(denominador AS INT) ELSE 0 END) AS den_10,
+                        CASE
+                            WHEN SUM(CASE WHEN mes = 10 THEN CAST(denominador AS INT) ELSE 0 END) = 0
+                            THEN 0
+                            ELSE ROUND(
+                                (
+                                    SUM(CASE WHEN mes = 10 THEN CAST(numerador AS INT) ELSE 0 END) * 1.0
+                                    / NULLIF(SUM(CASE WHEN mes = 10 THEN CAST(denominador AS INT) ELSE 0 END), 0)
+                                ) * 100
+                            , 2)
+                        END AS cob_10,
+                        -- NOVIEMBRE
+                        SUM(CASE WHEN mes = 11 THEN CAST(numerador AS INT) ELSE 0 END) AS num_11,
+                        SUM(CASE WHEN mes = 11 THEN CAST(denominador AS INT) ELSE 0 END) AS den_11,
+                        CASE
+                            WHEN SUM(CASE WHEN mes = 11 THEN CAST(denominador AS INT) ELSE 0 END) = 0
+                            THEN 0
+                            ELSE ROUND(
+                                (
+                                    SUM(CASE WHEN mes = 11 THEN CAST(numerador AS INT) ELSE 0 END) * 1.0
+                                    / NULLIF(SUM(CASE WHEN mes = 11 THEN CAST(denominador AS INT) ELSE 0 END), 0)
+                                ) * 100
+                            , 2)
+                        END AS cob_11,
+                        -- DICIEMBRE
+                        SUM(CASE WHEN mes = 12 THEN CAST(numerador AS INT) ELSE 0 END) AS num_12,
+                        SUM(CASE WHEN mes = 12 THEN CAST(denominador AS INT) ELSE 0 END) AS den_12,
+                        CASE
+                            WHEN SUM(CASE WHEN mes = 12 THEN CAST(denominador AS INT) ELSE 0 END) = 0
+                            THEN 0
+                            ELSE ROUND(
+                                (
+                                    SUM(CASE WHEN mes = 12 THEN CAST(numerador AS INT) ELSE 0 END) * 1.0
+                                    / NULLIF(SUM(CASE WHEN mes = 12 THEN CAST(denominador AS INT) ELSE 0 END), 0)
+                                ) * 100
+                            , 2)
+                        END AS cob_12
+                    FROM Compromiso_1.dbo.PAQUETE_COMPROMISO
+            '''
+            params = []
+            conditions = []
 
+            # Agregar filtros de año
+            if anio:
+                conditions.append("año = %s")
+                params.append(anio)
+
+            # Filtros de ubicación geográfica - usando LIKE para códigos de ubigeo
+            if provincia and provincia != '':
+                conditions.append("LEFT(ubigeo, 4) = %s")
+                params.append(provincia)
+            #    print(f"Filtro provincia aplicado: LEFT(Ubigeo, 4) = {provincia}")
+            
+            if distrito and distrito != '':
+                conditions.append("ubigeo = %s")
+                params.append(distrito)
+            #    print(f"Filtro distrito aplicado: Ubigeo = {distrito}")
+            
+            # Agregar WHERE solo si hay condiciones
+            if conditions:
+                sql_query += " WHERE " + " AND ".join(conditions)
+            
+            #print(f"[QUERY] SQL: {sql_query.strip()}")
+            #print(f"[QUERY] Parámetros: {params}")
+            
+            cursor.execute(sql_query, params)
+            resultados = cursor.fetchall()
+            column_names = [desc[0] for desc in cursor.description]
+            datos = [dict(zip(column_names, fila)) for fila in resultados]
+                
+        return datos
+    except Exception as e:
+        #print(f"[ERROR] Error al obtener el avance regional: {e}")
+        return []
 
 # RANKING GESTANTE
 def obtener_resumen_paquete_compromiso(anio, mes_inicio, mes_fin, provincia, distrito):
@@ -400,7 +516,7 @@ def obtener_resumen_paquete_compromiso(anio, mes_inicio, mes_fin, provincia, dis
         'ambito': 'NACIONAL' if not provincia else ('PROVINCIA' if not distrito else 'DISTRITO')
     }
     
-    print(f"[RESUMEN] {resumen}")
+    #print(f"[RESUMEN] {resumen}")
     return resumen
 
 def obtener_ranking_paquete_compromiso(anio, mes, red, microred, establecimiento, provincia, distrito):
@@ -455,10 +571,6 @@ def obtener_ranking_paquete_compromiso(anio, mes, red, microred, establecimiento
 
 ## AVANCE REGIONAL
 def obtener_avance_regional_paquete_compromiso():
-    """
-    Obtiene el avance regional de gestantes con anemia.
-    Retorna una lista de diccionarios con las claves 'num', 'den' y 'cob'.
-    """
     try:
         # Asegúrate de que la conexión a la base de datos está establecida
         with connection.cursor() as cursor:
@@ -492,200 +604,7 @@ def obtener_avance_regional_paquete_compromiso():
         
         return datos
     except Exception as e:
-        print(f"Error al obtener el avance regional: {e}")
-        return []
-
-## AVANCE REGIONAL MENSUALIZADO
-def obtener_avance_regional_mensual_paquete_compromiso(anio, mes, red, microred, establecimiento):
-    """
-    Obtiene el avance regional de gestantes con anemia de manera mensualizada.
-    Retorna una lista de diccionarios con las claves 'num', 'den' y 'cob' por meses.
-    """
-    try:
-        with connection.cursor() as cursor:
-            sql_query = '''
-                SELECT
-                -- ENERO
-                SUM(CASE WHEN mes = 1 THEN CAST(numerador AS INT) ELSE 0 END) AS num_1,
-                SUM(CASE WHEN mes = 1 THEN CAST(denominador AS INT) ELSE 0 END) AS den_1,
-                CASE
-                    WHEN SUM(CASE WHEN mes = 1 THEN CAST(denominador AS INT) ELSE 0 END) = 0
-                    THEN 0
-                    ELSE ROUND(
-                        (
-                            SUM(CASE WHEN mes = 1 THEN CAST(numerador AS INT) ELSE 0 END) * 1.0
-                            / NULLIF(SUM(CASE WHEN mes = 1 THEN CAST(denominador AS INT) ELSE 0 END), 0)
-                        ) * 100
-                    , 2)
-                END AS cob_1,
-                -- FEBRERO
-                SUM(CASE WHEN mes = 2 THEN CAST(numerador AS INT) ELSE 0 END) AS num_2,
-                SUM(CASE WHEN mes = 2 THEN CAST(denominador AS INT) ELSE 0 END) AS den_2,
-                CASE
-                    WHEN SUM(CASE WHEN mes = 2 THEN CAST(denominador AS INT) ELSE 0 END) = 0
-                    THEN 0
-                    ELSE ROUND(
-                        (
-                            SUM(CASE WHEN mes = 2 THEN CAST(numerador AS INT) ELSE 0 END) * 1.0
-                            / NULLIF(SUM(CASE WHEN mes = 2 THEN CAST(denominador AS INT) ELSE 0 END), 0)
-                        ) * 100
-                    , 2)
-                END AS cob_2,
-                -- MARZO
-                SUM(CASE WHEN mes = 3 THEN CAST(numerador AS INT) ELSE 0 END) AS num_3,
-                SUM(CASE WHEN mes = 3 THEN CAST(denominador AS INT) ELSE 0 END) AS den_3,
-                CASE
-                    WHEN SUM(CASE WHEN mes = 3 THEN CAST(denominador AS INT) ELSE 0 END) = 0
-                    THEN 0
-                    ELSE ROUND(
-                        (
-                            SUM(CASE WHEN mes = 3 THEN CAST(numerador AS INT) ELSE 0 END) * 1.0
-                            / NULLIF(SUM(CASE WHEN mes = 3 THEN CAST(denominador AS INT) ELSE 0 END), 0)
-                        ) * 100
-                    , 2)
-                END AS cob_3,
-                -- ABRIL
-                SUM(CASE WHEN mes = 4 THEN CAST(numerador AS INT) ELSE 0 END) AS num_4,
-                SUM(CASE WHEN mes = 4 THEN CAST(denominador AS INT) ELSE 0 END) AS den_4,
-                CASE
-                    WHEN SUM(CASE WHEN mes = 4 THEN CAST(denominador AS INT) ELSE 0 END) = 0
-                    THEN 0
-                    ELSE ROUND(
-                        (
-                            SUM(CASE WHEN mes = 4 THEN CAST(numerador AS INT) ELSE 0 END) * 1.0
-                            / NULLIF(SUM(CASE WHEN mes = 4 THEN CAST(denominador AS INT) ELSE 0 END), 0)
-                        ) * 100
-                    , 2)
-                END AS cob_4,
-                -- MAYO
-                SUM(CASE WHEN mes = 5 THEN CAST(numerador AS INT) ELSE 0 END) AS num_5,
-                SUM(CASE WHEN mes = 5 THEN CAST(denominador AS INT) ELSE 0 END) AS den_5,
-                CASE
-                    WHEN SUM(CASE WHEN mes = 5 THEN CAST(denominador AS INT) ELSE 0 END) = 0
-                    THEN 0
-                    ELSE ROUND(
-                        (
-                            SUM(CASE WHEN mes = 5 THEN CAST(numerador AS INT) ELSE 0 END) * 1.0
-                            / NULLIF(SUM(CASE WHEN mes = 5 THEN CAST(denominador AS INT) ELSE 0 END), 0)
-                        ) * 100
-                    , 2)
-                END AS cob_5,
-                -- JUNIO
-                SUM(CASE WHEN mes = 6 THEN CAST(numerador AS INT) ELSE 0 END) AS num_6,
-                SUM(CASE WHEN mes = 6 THEN CAST(denominador AS INT) ELSE 0 END) AS den_6,
-                CASE
-                    WHEN SUM(CASE WHEN mes = 6 THEN CAST(denominador AS INT) ELSE 0 END) = 0
-                    THEN 0
-                    ELSE ROUND(
-                        (
-                            SUM(CASE WHEN mes = 6 THEN CAST(numerador AS INT) ELSE 0 END) * 1.0
-                            / NULLIF(SUM(CASE WHEN mes = 6 THEN CAST(denominador AS INT) ELSE 0 END), 0)
-                        ) * 100
-                    , 2)
-                END AS cob_6,
-                -- JULIO
-                SUM(CASE WHEN mes = 7 THEN CAST(numerador AS INT) ELSE 0 END) AS num_7,
-                SUM(CASE WHEN mes = 7 THEN CAST(denominador AS INT) ELSE 0 END) AS den_7,
-                CASE
-                    WHEN SUM(CASE WHEN mes = 7 THEN CAST(denominador AS INT) ELSE 0 END) = 0
-                    THEN 0
-                    ELSE ROUND(
-                        (
-                            SUM(CASE WHEN mes = 7 THEN CAST(numerador AS INT) ELSE 0 END) * 1.0
-                            / NULLIF(SUM(CASE WHEN mes = 7 THEN CAST(denominador AS INT) ELSE 0 END), 0)
-                        ) * 100
-                    , 2)
-                END AS cob_7,
-                -- AGOSTO
-                SUM(CASE WHEN mes = 8 THEN CAST(numerador AS INT) ELSE 0 END) AS num_8,
-                SUM(CASE WHEN mes = 8 THEN CAST(denominador AS INT) ELSE 0 END) AS den_8,
-                CASE
-                    WHEN SUM(CASE WHEN mes = 8 THEN CAST(denominador AS INT) ELSE 0 END) = 0
-                    THEN 0
-                    ELSE ROUND(
-                        (
-                            SUM(CASE WHEN mes = 8 THEN CAST(numerador AS INT) ELSE 0 END) * 1.0
-                            / NULLIF(SUM(CASE WHEN mes = 8 THEN CAST(denominador AS INT) ELSE 0 END), 0)
-                        ) * 100
-                    , 2)
-                END AS cob_8,
-                -- SETIEMBRE
-                SUM(CASE WHEN mes = 9 THEN CAST(numerador AS INT) ELSE 0 END) AS num_9,
-                SUM(CASE WHEN mes = 9 THEN CAST(denominador AS INT) ELSE 0 END) AS den_9,
-                CASE
-                    WHEN SUM(CASE WHEN mes = 9 THEN CAST(denominador AS INT) ELSE 0 END) = 0
-                    THEN 0
-                    ELSE ROUND(
-                        (
-                            SUM(CASE WHEN mes = 9 THEN CAST(numerador AS INT) ELSE 0 END) * 1.0
-                            / NULLIF(SUM(CASE WHEN mes = 9 THEN CAST(denominador AS INT) ELSE 0 END), 0)
-                        ) * 100
-                    , 2)
-                END AS cob_9,
-                -- OCTUBRE
-                SUM(CASE WHEN mes = 10 THEN CAST(numerador AS INT) ELSE 0 END) AS num_10,
-                SUM(CASE WHEN mes = 10 THEN CAST(denominador AS INT) ELSE 0 END) AS den_10,
-                CASE
-                    WHEN SUM(CASE WHEN mes = 10 THEN CAST(denominador AS INT) ELSE 0 END) = 0
-                    THEN 0
-                    ELSE ROUND(
-                        (
-                            SUM(CASE WHEN mes = 10 THEN CAST(numerador AS INT) ELSE 0 END) * 1.0
-                            / NULLIF(SUM(CASE WHEN mes = 10 THEN CAST(denominador AS INT) ELSE 0 END), 0)
-                        ) * 100
-                    , 2)
-                END AS cob_10,
-                -- NOVIEMBRE
-                SUM(CASE WHEN mes = 11 THEN CAST(numerador AS INT) ELSE 0 END) AS num_11,
-                SUM(CASE WHEN mes = 11 THEN CAST(denominador AS INT) ELSE 0 END) AS den_11,
-                CASE
-                    WHEN SUM(CASE WHEN mes = 11 THEN CAST(denominador AS INT) ELSE 0 END) = 0
-                    THEN 0
-                    ELSE ROUND(
-                        (
-                            SUM(CASE WHEN mes = 11 THEN CAST(numerador AS INT) ELSE 0 END) * 1.0
-                            / NULLIF(SUM(CASE WHEN mes = 11 THEN CAST(denominador AS INT) ELSE 0 END), 0)
-                        ) * 100
-                    , 2)
-                END AS cob_11,
-                -- DICIEMBRE
-                SUM(CASE WHEN mes = 12 THEN CAST(numerador AS INT) ELSE 0 END) AS num_12,
-                SUM(CASE WHEN mes = 12 THEN CAST(denominador AS INT) ELSE 0 END) AS den_12,
-                CASE
-                    WHEN SUM(CASE WHEN mes = 12 THEN CAST(denominador AS INT) ELSE 0 END) = 0
-                    THEN 0
-                    ELSE ROUND(
-                        (
-                            SUM(CASE WHEN mes = 12 THEN CAST(numerador AS INT) ELSE 0 END) * 1.0
-                            / NULLIF(SUM(CASE WHEN mes = 12 THEN CAST(denominador AS INT) ELSE 0 END), 0)
-                        ) * 100
-                    , 2)
-                END AS cob_12
-                FROM Indicadores_FED.dbo.MC01_PaqueteGestante_Combinado
-                WHERE año = %s
-            '''
-            params = [anio]
-
-            if mes and mes != '':
-                sql_query += " AND mes <= %s"
-                params.append(mes)
-            if red and red != '':
-                sql_query += " AND Codigo_Red = %s"
-                params.append(red)
-            if microred and microred != '':
-                sql_query += " AND Codigo_MicroRed = %s"
-                params.append(microred)
-            if establecimiento and establecimiento != '':
-                sql_query += " AND Codigo_Unico = %s"
-                params.append(establecimiento)
-
-            cursor.execute(sql_query, params)
-            resultados = cursor.fetchall()
-            column_names = [desc[0] for desc in cursor.description]
-            datos = [dict(zip(column_names, fila)) for fila in resultados]
-        return datos
-    except Exception as e:
-        print(f"Error al obtener el avance regional: {e}")
+        #print(f"Error al obtener el avance regional: {e}")
         return []
 
 #############################
@@ -790,7 +709,7 @@ def obtener_avance_cobertura_paquete_compromiso(anio, mes, red_h, p_microredes_e
             datos = [dict(zip(column_names, fila)) for fila in resultados]
         return datos
     except Exception as e:
-        print(f"Error al obtener el avance regional: {e}")
+        #print(f"Error al obtener el avance regional: {e}")
         return []
 
 def obtener_cobertura_por_edad(anio, mes, red_h, p_microredes_establec_h, p_establecimiento_h, provincia, distrito):
@@ -864,7 +783,7 @@ def obtener_cobertura_por_edad(anio, mes, red_h, p_microredes_establec_h, p_esta
             datos = [dict(zip(column_names, fila)) for fila in resultados]
             return datos
     except Exception as e:
-        print(f"Error al obtener cobertura por grupo_edad: {e}")
+        #print(f"Error al obtener cobertura por grupo_edad: {e}")
         return []
 
 
@@ -939,7 +858,7 @@ def obtener_cobertura_por_red(anio, mes, red_h, p_microredes_establec_h, p_estab
             datos = [dict(zip(column_names, fila)) for fila in resultados]
             return datos
     except Exception as e:
-        print(f"Error al obtener cobertura por red: {e}")
+        #print(f"Error al obtener cobertura por red: {e}")
         return []    
 
 
@@ -1014,7 +933,7 @@ def obtener_cobertura_por_microred(anio, mes, red_h, p_microredes_establec_h, p_
             datos = [dict(zip(column_names, fila)) for fila in resultados]
             return datos
     except Exception as e:
-        print(f"Error al obtener cobertura por red: {e}")
+        #print(f"Error al obtener cobertura por red: {e}")
         return []    
 
 
@@ -1089,7 +1008,7 @@ def obtener_cobertura_por_establecimiento(anio, mes, red_h, p_microredes_estable
             datos = [dict(zip(column_names, fila)) for fila in resultados]
             return datos
     except Exception as e:
-        print(f"Error al obtener cobertura por red: {e}")
+        #print(f"Error al obtener cobertura por red: {e}")
         return []    
 
 ## REPORTES EN EXCEL EN SALUD

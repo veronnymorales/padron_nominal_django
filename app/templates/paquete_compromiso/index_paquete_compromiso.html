@@ -134,10 +134,19 @@
             <div class="col-md-2" id="detalle-avance-numden-container">
                 {% include "paquete_compromiso/components/chart/chart_avance_numden.html" %}
             </div>
-            <div class="col-md-8" id="detalle-avance-variables-container">
+            <div class="col-md-8" id="detalle-avance-mensual-container">
+                {% include "paquete_compromiso/components/chart/chart_avance_mensual_region.html" %}
+            </div>
+        </div>
+        <!-- Card avance regional -->
+        <div class="row">
+            <!-- Card avance regional -->
+            <div class="col-md-12" id="detalle-avance-variables-container">
                 {% include "paquete_compromiso/components/chart/chart_avance_variables.html" %}
             </div>
         </div>
+
+
         <!-- Red rows -->
         <div class="row">
             <!-- Red: ranking del Indicador -->
@@ -258,4 +267,64 @@
     </div>
     <!-- /.modal-dialog -->
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const filtroForm = document.querySelector('form');
+
+    function actualizarDashboard(params) {
+        const queryString = new URLSearchParams(params).toString();
+        
+        // Muestra un indicador de carga general (opcional)
+        // document.getElementById('loading-indicator').style.display = 'block';
+
+        fetch(`{% url "index_paquete_compromiso" %}?${queryString}`, {
+            headers: { "X-Requested-With": "XMLHttpRequest" },
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Error en la respuesta del servidor: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Llama a las funciones de renderizado de cada componente
+            // pasando los datos correspondientes.
+            if (window.renderChartAvanceRegion) window.renderChartAvanceRegion(data, params);
+            if (window.renderChartAvanceNumDen) window.renderChartAvanceNumDen(data, params);
+            if (window.renderChartAvanceMensual) window.renderChartAvanceMensual(data, params);
+            if (window.renderChartAvanceVariables) window.renderChartAvanceVariables(data, params);
+            if (window.renderChartRed) window.renderChartRed(data, params);
+            if (window.renderChartMicrored) window.renderChartMicrored(data, params);
+            if (window.renderChartEstablecimiento) window.renderChartEstablecimiento(data, params);
+            
+            // Oculta el indicador de carga
+            // document.getElementById('loading-indicator').style.display = 'none';
+        })
+        .catch(error => {
+            console.error("Error al cargar datos del dashboard:", error);
+            // Maneja el error de forma centralizada
+            // document.getElementById('loading-indicator').style.display = 'none';
+            // alert('Ocurrió un error al actualizar el dashboard.');
+        });
+    }
+
+    if (filtroForm) {
+        filtroForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const formData = new FormData(filtroForm);
+            const params = {};
+            for (const [key, value] of formData.entries()) {
+                if (value) {
+                    params[key] = value;
+                }
+            }
+            actualizarDashboard(params);
+        });
+
+        // Carga inicial de datos
+        filtroForm.dispatchEvent(new Event('submit'));
+    }
+});
+</script>
 {% endblock %}

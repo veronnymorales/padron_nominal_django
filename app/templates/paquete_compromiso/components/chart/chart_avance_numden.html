@@ -1,37 +1,37 @@
 <!-- Card para mostrar numerador y denominador -->
 <script>
-  (function () {
-    console.log("=== INICIANDO CHART_AVANCE_NUMDEN SIMPLE ===");
-
-    function initChart() {
-      const container = document.getElementById(
-        "detalle-avance-numden-container"
-      );
-
-      if (!container) {
-        console.error("Contenedor no encontrado");
+window.renderChartAvanceNumDen = function(data, params) {
+    const container = document.getElementById("detalle-avance-numden-container");
+    if (!container) {
+        console.error("Contenedor para num/den no encontrado");
         return;
-      }
+    }
 
-      console.log("Contenedor encontrado:", container);
+    try {
+        const extractValue = (rawValue) => {
+            if (rawValue == null) return 0;
+            const value = Array.isArray(rawValue) ? rawValue[0] : rawValue;
+            return parseInt(value, 10) || 0;
+        };
 
-      function renderCard(numerador, denominador) {
+        const numerador = extractValue(data.r_numerador_resumen);
+        const denominador = extractValue(data.r_denominador_resumen);
         const brecha = denominador - numerador;
         const avance = denominador > 0 ? (numerador / denominador) * 100 : 0;
 
         let clasificacion, colorClass, iconClass;
         if (avance >= 67) {
-          clasificacion = "CUMPLE";
-          colorClass = "success";
-          iconClass = "check-circle";
+            clasificacion = "CUMPLE";
+            colorClass = "success";
+            iconClass = "check-circle";
         } else if (avance >= 33) {
-          clasificacion = "PROCESO";
-          colorClass = "warning";
-          iconClass = "clock";
+            clasificacion = "PROCESO";
+            colorClass = "warning";
+            iconClass = "clock";
         } else {
-          clasificacion = "RIESGO";
-          colorClass = "danger";
-          iconClass = "exclamation-triangle";
+            clasificacion = "RIESGO";
+            colorClass = "danger";
+            iconClass = "exclamation-triangle";
         }
 
         const cardHTML = `
@@ -76,97 +76,10 @@
             </div>
           </div>
         `;
-
         container.innerHTML = cardHTML;
-
-        console.log(
-          "Card renderizada con innerHTML: Num=" +
-            numerador +
-            ", Den=" +
-            denominador +
-            ", Avance=" +
-            avance.toFixed(1) +
-            "%"
-        );
-      }
-
-      function loadData(params) {
-        params = params || {};
-        const queryString = new URLSearchParams(params).toString();
-        const url =
-          "{% url 'index_paquete_compromiso' %}" +
-          (queryString ? "?" + queryString : "");
-
-        console.log("Cargando datos desde:", url);
-
-        fetch(url, {
-          headers: { "X-Requested-With": "XMLHttpRequest" },
-          cache: "no-cache",
-        })
-          .then(function (response) {
-            return response.json();
-          })
-          .then(function (data) {
-            console.log("Datos recibidos:", data);
-
-            // Helper to extract value, whether it's in an array or not
-            function extractValue(rawValue) {
-              if (rawValue == null) return null; // Handles null or undefined
-              const value = Array.isArray(rawValue) ? rawValue[0] : rawValue;
-              if (value == null || value === "") return null;
-              return value;
-            }
-
-            const num_val = extractValue(data.r_numerador_resumen);
-            const den_val = extractValue(data.r_denominador_resumen);
-
-            if (num_val != null && den_val != null) {
-              const numerador = parseInt(num_val, 10) || 0;
-              const denominador = parseInt(den_val, 10) || 0;
-              renderCard(numerador, denominador);
-            } else {
-              container.innerHTML =
-                '<div class="alert alert-info">No hay datos disponibles</div>';
-            }
-          })
-          .catch(function (error) {
-            console.error("Error:", error);
-            container.innerHTML =
-              '<div class="alert alert-danger">Error al cargar datos</div>';
-          });
-      }
-
-      // Cargar datos iniciales
-      loadData();
-
-      // Escuchar eventos del formulario
-      const form = document.querySelector("form");
-      if (form) {
-        form.addEventListener("submit", function (e) {
-          e.preventDefault();
-          console.log("Submit capturado");
-
-          const formData = new FormData(form);
-          const params = {};
-          for (const entry of formData.entries()) {
-            const key = entry[0];
-            const value = entry[1];
-            if (value) {
-              params[key] = value;
-            }
-          }
-
-          console.log("Parámetros:", params);
-          loadData(params);
-        });
-      }
+    } catch (error) {
+        console.error("Error al renderizar la tarjeta de num/den:", error);
+        container.innerHTML = '<div class="alert alert-danger">Error al mostrar datos</div>';
     }
-
-    // Inicializar cuando el DOM esté listo
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", initChart);
-    } else {
-      initChart();
-    }
-  })();
+};
 </script>
