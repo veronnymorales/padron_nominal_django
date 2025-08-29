@@ -149,15 +149,15 @@
         </div>
 
 
-        <!-- Red rows -->
+        <!-- Zona rows -->
         <div class="row">
-            <!-- Red: ranking del Indicador -->
+            <!-- ZONA: ranking del Indicador -->
             <div class="col-md-4">
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">
                             <i class="fas fa-chart-line mr-1"></i>
-                            AVANCE POR RED DE SALUD
+                            AVANCE POR ZONA
                         </h3>
                         <div class="card-tools">
                             <button type="button" class="btn btn-tool" data-card-widget="collapse">
@@ -167,21 +167,21 @@
                     </div>
                     <div class="card-body">
                         <div class="chart-container">
-                            <div id="chart_red_ranking" style="height: 400px;">
-                                {% include 'paquete_compromiso/components/chart/chart_grafico_red.html' %}
+                            <div id="chart_zona_ranking" style="height: 400px;">
+                                {% include 'paquete_compromiso/components/chart/chart_grafico_zona.html' %}
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <!-- Microred: ranking del Indicador -->
+            <!-- PROVINCIA: ranking del Indicador -->
             <div class="col-md-4">
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">
                             <i class="fas fa-chart-line mr-1"></i>
-                            AVANCE POR MICRORED
+                            AVANCE POR PROVINCIA
                         </h3>
                         <div class="card-tools">
                             <button type="button" class="btn btn-tool" data-card-widget="collapse">
@@ -191,21 +191,21 @@
                     </div>
                     <div class="card-body">
                         <div class="chart-container">
-                            <div id="chart_microred_ranking" style="height: 400px;">
-                                {% include 'paquete_compromiso/components/chart/chart_grafico_microred.html' %} <!-- Chart will be rendered here -->
+                            <div id="chart_provincia_ranking" style="height: 400px;">
+                                {% include 'paquete_compromiso/components/chart/chart_grafico_provincia.html' %} <!-- Chart will be rendered here -->
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <!-- Establecimiento: ranking del Indicador -->
+            <!-- PROVINCIA: ranking del Indicador -->
             <div class="col-md-4">
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">
                             <i class="fas fa-chart-line mr-1"></i>
-                            AVANCE POR ESTABLECIMIENTO DE SALUD
+                            AVANCE POR DISTRITO
                         </h3>
                         <div class="card-tools">
                             <button type="button" class="btn btn-tool" data-card-widget="collapse">
@@ -215,8 +215,8 @@
                     </div>
                     <div class="card-body">
                         <div class="chart-container">
-                            <div id="chart_establecimiento_ranking" style="height: 400px;">
-                                {% include 'paquete_compromiso/components/chart/chart_grafico_establecimiento.html' %}
+                            <div id="chart_distrito_ranking" style="height: 400px;">
+                                {% include 'paquete_compromiso/components/chart/chart_grafico_distrito.html' %}
                             </div>
                         </div>
                     </div>
@@ -296,7 +296,10 @@ document.addEventListener('DOMContentLoaded', function () {
             if (window.renderChartAvanceNumDen) window.renderChartAvanceNumDen(data, params);
             if (window.renderChartAvanceMensual) window.renderChartAvanceMensual(data, params);
             if (window.renderChartAvanceVariables) window.renderChartAvanceVariables(data, params);
-            if (window.renderChartRed) window.renderChartRed(data, params);
+            if (window.renderChartZona) window.renderChartZona(data, params);
+            if (window.renderChartProvincia) window.renderChartProvincia(data, params);
+            if (window.renderChartDistrito) window.renderChartDistrito(data, params);
+
             if (window.renderChartMicrored) window.renderChartMicrored(data, params);
             if (window.renderChartEstablecimiento) window.renderChartEstablecimiento(data, params);
             

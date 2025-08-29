@@ -8,7 +8,8 @@ from django.db.models.functions import Substr
 import logging
 
 from .queries import (obtener_avance_paquete_compromiso, obtener_variables_paquete_compromiso, obtener_avance_regional_mensual_paquete_compromiso,
-                    obtener_avance_regional_mensual_paquete_compromiso, obtener_avance_cobertura_paquete_compromiso, obtener_cobertura_por_edad, 
+                    obtener_cobertura_por_zona, obtener_cobertura_por_provincia, obtener_cobertura_por_distrito, 
+                    obtener_avance_regional_mensual_paquete_compromiso, obtener_avance_cobertura_paquete_compromiso, 
                     obtener_cobertura_por_red, obtener_cobertura_por_microred, obtener_cobertura_por_establecimiento, 
                     obtener_seguimiento_paquete_compromiso_red, obtener_seguimiento_paquete_compromiso_microred, obtener_seguimiento_paquete_compromiso_establecimiento)
 
@@ -95,6 +96,132 @@ def process_avance_por_region(resultados_avance_por_region):
         data['r_avance_resumen'] = [0.0]
     
     #print(f"[PROCESS] Resultado final: {data}")
+    return data
+
+def process_avance_regional_mensual_paquete_compromiso(resultados_avance_regional_mensual_paquete_compromiso):
+    """Procesa los resultados del graficos"""
+    data = {
+        'num_1': [],
+        'den_1': [],
+        'cob_1': [],
+        'num_2': [],
+        'den_2': [],
+        'cob_2': [],
+        'num_3': [],
+        'den_3': [],
+        'cob_3': [],
+        'num_4': [],
+        'den_4': [],
+        'cob_4': [],
+        'num_5': [],
+        'den_5': [],
+        'cob_5': [],
+        'num_6': [],
+        'den_6': [],
+        'cob_6': [],
+        'num_7': [],
+        'den_7': [],
+        'cob_7': [],
+        'num_8': [],
+        'den_8': [],
+        'cob_8': [],                
+        'num_9': [],
+        'den_9': [],
+        'cob_9': [],
+        'num_10': [],
+        'den_10': [],
+        'cob_10': [],
+        'num_11': [],
+        'den_11': [],
+        'cob_11': [],
+        'num_12': [],
+        'den_12': [],
+        'cob_12': [],
+    }
+    for index, row in enumerate(resultados_avance_regional_mensual_paquete_compromiso):
+        try:
+            # Verifica que el diccionario tenga las claves necesarias
+            required_keys = {'num_1','den_1','cob_1','num_2','den_2','cob_2','num_3','den_3','cob_3','num_4','den_4','cob_4','num_5','den_5','cob_5','num_6','den_6','cob_6','num_7','den_7','cob_7','num_8','den_8','cob_8','num_9','den_9','cob_9','num_10','den_10','cob_10','num_11','den_11','cob_11','num_12','den_12','cob_12'}
+            
+            if not required_keys.issubset(row.keys()):
+                raise ValueError(f"La fila {index} no tiene las claves necesarias: {row}")
+            # Extraer cada valor, convirtiendo a float
+            num_1_value = float(row.get('num_1', 0.0))
+            den_1_value = float(row.get('den_1', 0.0))
+            cob_1_value = float(row.get('cob_1', 0.0))
+            num_2_value = float(row.get('num_2', 0.0))
+            den_2_value = float(row.get('den_2', 0.0))
+            cob_2_value = float(row.get('cob_2', 0.0))
+            num_3_value = float(row.get('num_3', 0.0))
+            den_3_value = float(row.get('den_3', 0.0))
+            cob_3_value = float(row.get('cob_3', 0.0))
+            num_4_value = float(row.get('num_4', 0.0))
+            den_4_value = float(row.get('den_4', 0.0))
+            cob_4_value = float(row.get('cob_4', 0.0))
+            num_5_value = float(row.get('num_5', 0.0))
+            den_5_value = float(row.get('den_5', 0.0))
+            cob_5_value = float(row.get('cob_5', 0.0))
+            num_6_value = float(row.get('num_6', 0.0))
+            den_6_value = float(row.get('den_6', 0.0))
+            cob_6_value = float(row.get('cob_6', 0.0))
+            num_7_value = float(row.get('num_7', 0.0))
+            den_7_value = float(row.get('den_7', 0.0))
+            cob_7_value = float(row.get('cob_7', 0.0))
+            num_8_value = float(row.get('num_8', 0.0))
+            den_8_value = float(row.get('den_8', 0.0))
+            cob_8_value = float(row.get('cob_8', 0.0))
+            num_9_value = float(row.get('num_9', 0.0))
+            den_9_value = float(row.get('den_9', 0.0))
+            cob_9_value = float(row.get('cob_9', 0.0))
+            num_10_value = float(row.get('num_10', 0.0))
+            den_10_value = float(row.get('den_10', 0.0))
+            cob_10_value = float(row.get('cob_10', 0.0))
+            num_11_value = float(row.get('num_11', 0.0))
+            den_11_value = float(row.get('den_11', 0.0))
+            cob_11_value = float(row.get('cob_11', 0.0))
+            num_12_value = float(row.get('num_12', 0.0))
+            den_12_value = float(row.get('den_12', 0.0))
+            cob_12_value = float(row.get('cob_12', 0.0))
+            
+            data['num_1'].append(num_1_value)
+            data['den_1'].append(den_1_value)
+            data['cob_1'].append(cob_1_value)
+            data['num_2'].append(num_2_value)
+            data['den_2'].append(den_2_value)
+            data['cob_2'].append(cob_2_value)
+            data['num_3'].append(num_3_value)
+            data['den_3'].append(den_3_value)
+            data['cob_3'].append(cob_3_value)
+            data['num_4'].append(num_4_value)
+            data['den_4'].append(den_4_value)
+            data['cob_4'].append(cob_4_value)
+            data['num_5'].append(num_5_value)
+            data['den_5'].append(den_5_value)
+            data['cob_5'].append(cob_5_value)
+            data['num_6'].append(num_6_value)
+            data['den_6'].append(den_6_value)
+            data['cob_6'].append(cob_6_value)
+            data['num_7'].append(num_7_value)
+            data['den_7'].append(den_7_value)
+            data['cob_7'].append(cob_7_value)
+            data['num_8'].append(num_8_value)
+            data['den_8'].append(den_8_value)
+            data['cob_8'].append(cob_8_value)
+            data['num_9'].append(num_9_value)
+            data['den_9'].append(den_9_value)
+            data['cob_9'].append(cob_9_value)
+            data['num_10'].append(num_10_value)
+            data['den_10'].append(den_10_value)
+            data['cob_10'].append(cob_10_value)
+            data['num_11'].append(num_11_value)
+            data['den_11'].append(den_11_value)
+            data['cob_11'].append(cob_11_value)
+            data['num_12'].append(num_12_value)
+            data['den_12'].append(den_12_value)
+            data['cob_12'].append(cob_12_value)
+
+        except Exception as e:
+            logger.error(f"Error procesando la fila {index}: {str(e)}")
     return data
 
 def process_variables_por_region(resultados_variables_por_region):
@@ -307,130 +434,73 @@ def process_variables_por_region(resultados_variables_por_region):
     #print(f"[PROCESS] Resultado final: {data}")
     return data
 
-def process_avance_regional_mensual_paquete_compromiso(resultados_avance_regional_mensual_paquete_compromiso):
+def process_cobertura_por_zona(resultados_cobertura_por_zona):
     """Procesa los resultados del graficos"""
     data = {
-        'num_1': [],
-        'den_1': [],
-        'cob_1': [],
-        'num_2': [],
-        'den_2': [],
-        'cob_2': [],
-        'num_3': [],
-        'den_3': [],
-        'cob_3': [],
-        'num_4': [],
-        'den_4': [],
-        'cob_4': [],
-        'num_5': [],
-        'den_5': [],
-        'cob_5': [],
-        'num_6': [],
-        'den_6': [],
-        'cob_6': [],
-        'num_7': [],
-        'den_7': [],
-        'cob_7': [],
-        'num_8': [],
-        'den_8': [],
-        'cob_8': [],                
-        'num_9': [],
-        'den_9': [],
-        'cob_9': [],
-        'num_10': [],
-        'den_10': [],
-        'cob_10': [],
-        'num_11': [],
-        'den_11': [],
-        'cob_11': [],
-        'num_12': [],
-        'den_12': [],
-        'cob_12': [],
-    }
-    for index, row in enumerate(resultados_avance_regional_mensual_paquete_compromiso):
+            'z_zona': [],
+            'z_den': [],
+            'z_num': [],
+            'z_brecha': [],
+            'z_cob': [],
+    }   
+    for row in resultados_cobertura_por_zona:
         try:
-            # Verifica que el diccionario tenga las claves necesarias
-            required_keys = {'num_1','den_1','cob_1','num_2','den_2','cob_2','num_3','den_3','cob_3','num_4','den_4','cob_4','num_5','den_5','cob_5','num_6','den_6','cob_6','num_7','den_7','cob_7','num_8','den_8','cob_8','num_9','den_9','cob_9','num_10','den_10','cob_10','num_11','den_11','cob_11','num_12','den_12','cob_12'}
-            
-            if not required_keys.issubset(row.keys()):
-                raise ValueError(f"La fila {index} no tiene las claves necesarias: {row}")
-            # Extraer cada valor, convirtiendo a float
-            num_1_value = float(row.get('num_1', 0.0))
-            den_1_value = float(row.get('den_1', 0.0))
-            cob_1_value = float(row.get('cob_1', 0.0))
-            num_2_value = float(row.get('num_2', 0.0))
-            den_2_value = float(row.get('den_2', 0.0))
-            cob_2_value = float(row.get('cob_2', 0.0))
-            num_3_value = float(row.get('num_3', 0.0))
-            den_3_value = float(row.get('den_3', 0.0))
-            cob_3_value = float(row.get('cob_3', 0.0))
-            num_4_value = float(row.get('num_4', 0.0))
-            den_4_value = float(row.get('den_4', 0.0))
-            cob_4_value = float(row.get('cob_4', 0.0))
-            num_5_value = float(row.get('num_5', 0.0))
-            den_5_value = float(row.get('den_5', 0.0))
-            cob_5_value = float(row.get('cob_5', 0.0))
-            num_6_value = float(row.get('num_6', 0.0))
-            den_6_value = float(row.get('den_6', 0.0))
-            cob_6_value = float(row.get('cob_6', 0.0))
-            num_7_value = float(row.get('num_7', 0.0))
-            den_7_value = float(row.get('den_7', 0.0))
-            cob_7_value = float(row.get('cob_7', 0.0))
-            num_8_value = float(row.get('num_8', 0.0))
-            den_8_value = float(row.get('den_8', 0.0))
-            cob_8_value = float(row.get('cob_8', 0.0))
-            num_9_value = float(row.get('num_9', 0.0))
-            den_9_value = float(row.get('den_9', 0.0))
-            cob_9_value = float(row.get('cob_9', 0.0))
-            num_10_value = float(row.get('num_10', 0.0))
-            den_10_value = float(row.get('den_10', 0.0))
-            cob_10_value = float(row.get('cob_10', 0.0))
-            num_11_value = float(row.get('num_11', 0.0))
-            den_11_value = float(row.get('den_11', 0.0))
-            cob_11_value = float(row.get('cob_11', 0.0))
-            num_12_value = float(row.get('num_12', 0.0))
-            den_12_value = float(row.get('den_12', 0.0))
-            cob_12_value = float(row.get('cob_12', 0.0))
-            
-            data['num_1'].append(num_1_value)
-            data['den_1'].append(den_1_value)
-            data['cob_1'].append(cob_1_value)
-            data['num_2'].append(num_2_value)
-            data['den_2'].append(den_2_value)
-            data['cob_2'].append(cob_2_value)
-            data['num_3'].append(num_3_value)
-            data['den_3'].append(den_3_value)
-            data['cob_3'].append(cob_3_value)
-            data['num_4'].append(num_4_value)
-            data['den_4'].append(den_4_value)
-            data['cob_4'].append(cob_4_value)
-            data['num_5'].append(num_5_value)
-            data['den_5'].append(den_5_value)
-            data['cob_5'].append(cob_5_value)
-            data['num_6'].append(num_6_value)
-            data['den_6'].append(den_6_value)
-            data['cob_6'].append(cob_6_value)
-            data['num_7'].append(num_7_value)
-            data['den_7'].append(den_7_value)
-            data['cob_7'].append(cob_7_value)
-            data['num_8'].append(num_8_value)
-            data['den_8'].append(den_8_value)
-            data['cob_8'].append(cob_8_value)
-            data['num_9'].append(num_9_value)
-            data['den_9'].append(den_9_value)
-            data['cob_9'].append(cob_9_value)
-            data['num_10'].append(num_10_value)
-            data['den_10'].append(den_10_value)
-            data['cob_10'].append(cob_10_value)
-            data['num_11'].append(num_11_value)
-            data['den_11'].append(den_11_value)
-            data['cob_11'].append(cob_11_value)
-            data['num_12'].append(num_12_value)
-            data['den_12'].append(den_12_value)
-            data['cob_12'].append(cob_12_value)
+            data['z_zona'].append(row['z_zona'])
 
-        except Exception as e:
-            logger.error(f"Error procesando la fila {index}: {str(e)}")
+            # Cambia null (None) a 0
+            data['z_den'].append(row['z_den'] if row['z_den'] is not None else 0)
+            data['z_num'].append(row['z_num'] if row['z_num'] is not None else 0)
+            data['z_brecha'].append(row['z_brecha'] if row['z_brecha'] is not None else 0)
+            data['z_cob'].append(row['z_cob'] if row['z_cob'] is not None else 0)
+        except KeyError as e:
+            logger.warning(f"Fila con estructura inválida (clave faltante: {e}): {row}")
+
+    return data
+
+def process_cobertura_por_provincia(resultados_cobertura_por_provincia):
+    """Procesa los resultados del graficos"""
+    data = {
+            'p_provincia': [],
+            'p_den': [],
+            'p_num': [],
+            'p_brecha': [],
+            'p_cob': [],
+    }   
+    for row in resultados_cobertura_por_provincia:
+        try:
+            data['p_provincia'].append(row['p_provincia'])
+
+            # Cambia null (None) a 0
+            data['p_den'].append(row['p_den'] if row['p_den'] is not None else 0)
+            data['p_num'].append(row['p_num'] if row['p_num'] is not None else 0)
+            data['p_brecha'].append(row['p_brecha'] if row['p_brecha'] is not None else 0)
+            data['p_cob'].append(row['p_cob'] if row['p_cob'] is not None else 0)
+        except KeyError as e:
+            logger.warning(f"Fila con estructura inválida (clave faltante: {e}): {row}")
+
+    return data
+
+def process_cobertura_por_distrito(resultados_cobertura_por_distrito):
+    """Procesa los resultados del graficos"""
+    data = {
+            'd_distrito': [],
+            'd_den': [],
+            'd_num': [],
+            'd_brecha': [],
+            'd_cob': [],
+    }   
+    for row in resultados_cobertura_por_distrito:
+        try:
+            data['d_distrito'].append(row['d_distrito'])
+
+            # Cambia null (None) a 0
+            data['d_den'].append(row['d_den'] if row['d_den'] is not None else 0)
+            data['d_num'].append(row['d_num'] if row['d_num'] is not None else 0)
+            data['d_brecha'].append(row['d_brecha'] if row['d_brecha'] is not None else 0)
+            data['d_cob'].append(row['d_cob'] if row['d_cob'] is not None else 0)
+        except KeyError as e:
+            logger.warning(f"Fila con estructura inválida (clave faltante: {e}): {row}")
+
     return data
 
 ##----------------------------
@@ -571,6 +641,7 @@ def process_cobertura_por_establecimiento(resultados_cobertura_por_establecimien
 
     return data
 
+
 #######################
 ## PANTALLA PRINCIPAL
 #######################
@@ -624,9 +695,13 @@ def index_paquete_compromiso(request):
             resultados_variables_por_region = obtener_variables_paquete_compromiso(anio, mes_seleccionado_inicio, mes_seleccionado_fin, provincia_seleccionada, distrito_seleccionado)           
             resultados_avance_regional_mensual_paquete_compromiso = obtener_avance_regional_mensual_paquete_compromiso(anio, mes_seleccionado_inicio, mes_seleccionado_fin, provincia_seleccionada, distrito_seleccionado) 
             
+            resultados_cobertura_por_zona = obtener_cobertura_por_zona(anio, mes_seleccionado_inicio, mes_seleccionado_fin, provincia_seleccionada, distrito_seleccionado)
+            resultados_cobertura_por_provincia = obtener_cobertura_por_provincia(anio, mes_seleccionado_inicio, mes_seleccionado_fin, provincia_seleccionada, distrito_seleccionado)
+            resultados_cobertura_por_distrito = obtener_cobertura_por_distrito(anio, mes_seleccionado_inicio, mes_seleccionado_fin, provincia_seleccionada, distrito_seleccionado)
+            
             # Lógica para la sección de cobertura
             resultados_avance_cobertura_paquete_compromiso = obtener_avance_cobertura_paquete_compromiso(anio, mes, red_seleccionada, microred_seleccionada, establecimiento_seleccionado, provincia, distrito)
-            resultados_cobertura_por_edad = obtener_cobertura_por_edad(anio, mes, red_seleccionada, microred_seleccionada, establecimiento_seleccionado, provincia, distrito)
+            
             resultados_cobertura_por_red = obtener_cobertura_por_red(anio, mes, red_seleccionada, microred_seleccionada, establecimiento_seleccionado, provincia, distrito)
             resultados_cobertura_por_microred = obtener_cobertura_por_microred(anio, mes, red_seleccionada, microred_seleccionada, establecimiento_seleccionado, provincia, distrito)
             resultados_cobertura_por_establecimiento = obtener_cobertura_por_establecimiento(anio, mes, red_seleccionada, microred_seleccionada, establecimiento_seleccionado, provincia, distrito)
@@ -637,7 +712,12 @@ def index_paquete_compromiso(request):
                 **process_variables_por_region(resultados_variables_por_region),
                 **process_avance_regional_mensual_paquete_compromiso(resultados_avance_regional_mensual_paquete_compromiso),
                 **process_avance_cobertura_paquete_compromiso(resultados_avance_cobertura_paquete_compromiso),
-                **process_cobertura_por_edad(resultados_cobertura_por_edad),
+                
+                # Graficos de barras
+                **process_cobertura_por_zona(resultados_cobertura_por_zona),
+                **process_cobertura_por_provincia(resultados_cobertura_por_provincia),
+                **process_cobertura_por_distrito(resultados_cobertura_por_distrito),
+                
                 **process_cobertura_por_red(resultados_cobertura_por_red),
                 **process_cobertura_por_microred(resultados_cobertura_por_microred),
                 **process_cobertura_por_establecimiento(resultados_cobertura_por_establecimiento)

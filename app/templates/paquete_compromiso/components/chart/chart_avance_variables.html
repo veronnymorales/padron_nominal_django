@@ -1,12 +1,17 @@
 
-  <div class="row">
+<div class="row">
     <div class="col-md-3">
         <div class="card">
             <div class="card-header">
-              <h3 class="card-title">
-                <i class="fas fa-baby mr-1"></i>
-                  CRED
-              </h3>
+                <h3 class="card-title">
+                    <i class="fas fa-baby mr-1"></i>
+                        CRED
+                </h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                </div>
             </div>
             <div class="card-body">
                 <div id="chart-cred" style="min-height: 250px;"></div>
@@ -17,10 +22,15 @@
     <div class="col-md-3">
         <div class="card">
             <div class="card-header">
-              <h3 class="card-title">
-                <i class="fas fa-syringe mr-1"></i>
-                  VACUNACION
-              </h3>
+                <h3 class="card-title">
+                    <i class="fas fa-syringe mr-1"></i>
+                    VACUNACION
+                </h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                </div>
             </div>
             <div class="card-body">
                 <div id="chart-vacunacion" style="min-height: 250px;"></div>
@@ -31,10 +41,15 @@
     <div class="col-md-3">
         <div class="card">
             <div class="card-header">
-              <h3 class="card-title">
-                <i class="fas fa-brain mr-1"></i>
-                  SUPLEMENTACION
-              </h3>
+                <h3 class="card-title">
+                    <i class="fas fa-brain mr-1"></i>
+                    SUPLEMENTACION
+                </h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                </div>
             </div>
             <div class="card-body">
                 <div id="chart-suplementacion" style="min-height: 250px;"></div>
@@ -45,10 +60,15 @@
     <div class="col-md-2">
         <div class="card">
             <div class="card-header">
-              <h3 class="card-title">
-                <i class="fas fa-vial mr-1"></i>
-                  DOSAJE HB
-              </h3>
+                <h3 class="card-title">
+                    <i class="fas fa-vial mr-1"></i>
+                    DOSAJE HB
+                </h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                </div>
             </div>
             <div class="card-body">
                 <div id="chart-hemoglobina" style="min-height: 250px;"></div>
@@ -57,17 +77,22 @@
     </div>
         
     <div class="col-md-1">
-      <div class="card">
-          <div class="card-header">
-            <h3 class="card-title">
-              <i class="fas fa-id-card mr-1"></i>
-                DNI
-            </h3>
-          </div>
-          <div class="card-body">
-              <div id="chart-dni" style="min-height: 250px;"></div>
-          </div>
-      </div>
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-id-card mr-1"></i>
+                    DNI
+                </h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="chart-dni" style="min-height: 250px;"></div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -108,6 +133,7 @@ window.renderChartAvanceVariables = function(data, params) {
                     return `Alcanzado: ${dataItem.numerator}<br/>Avance: ${dataItem.value.toFixed(1)}%`;
                 }
             },
+            toolbox: { feature: { saveAsImage: {} } },
             xAxis: {
                 type: 'category',
                 data: labels,
@@ -122,7 +148,17 @@ window.renderChartAvanceVariables = function(data, params) {
                 name: 'Avance',
                 type: 'bar',
                 data: chartData,
-                itemStyle: { color: '#5070dd' }
+                itemStyle: { color: '#5070dd' },
+                label: {
+                    show: true,
+                    position: 'top',
+                    formatter: function(params) {
+                        return params.data.numerator;
+                    },
+                    fontSize: 8,
+                    color: 'black',
+                    fontWeight: 'bold'
+                }
             }]
         };
         chartInstance.setOption(option);
