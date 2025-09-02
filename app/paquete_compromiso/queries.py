@@ -1283,7 +1283,7 @@ def obtener_seguimiento_paquete_compromiso(anio, mes_inicio, mes_fin, provincia,
                 params.append(p_microredes)
             
             if p_establecimiento and p_establecimiento != '':
-                conditions.append("Id_Establecimiento = %s")
+                conditions.append("Codigo_Unico = %s")
                 params.append(p_establecimiento)
             
             # Agregar filtro de cumplimiento del indicador
@@ -1301,8 +1301,8 @@ def obtener_seguimiento_paquete_compromiso(anio, mes_inicio, mes_fin, provincia,
             column_names = [desc[0] for desc in cursor.description]
             datos = [dict(zip(column_names, fila)) for fila in resultados]
             
-            print(f"[QUERY] SQL: {sql_query.strip()}")
-            print(f"[QUERY] Parámetros: {params}")
+            #print(f"[QUERY] SQL: {sql_query.strip()}")
+            #print(f"[QUERY] Parámetros: {params}")
             
         return datos
     except Exception as e:

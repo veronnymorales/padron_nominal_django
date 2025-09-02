@@ -1061,8 +1061,26 @@ def get_provincias_paquete_compromiso(request, provincia_id):
                 .distinct()
                 .order_by('Provincia')
     )
+    mes_inicio = (
+                DimPeriodo
+                .objects.filter()
+                .annotate(nro_mes=Cast('NroMes', IntegerField())) 
+                .values('Mes','nro_mes')
+                .order_by('NroMes')
+                .distinct()
+    ) 
+    mes_fin = (
+                DimPeriodo
+                .objects.filter()
+                .annotate(nro_mes=Cast('NroMes', IntegerField())) 
+                .values('Mes','nro_mes')
+                .order_by('NroMes')
+                .distinct()
+    )
     context = {
                 'provincias': provincias,
+                'mes_inicio':mes_inicio,
+                'mes_fin':mes_fin,
             }
     
     return render(request, 'paquete_compromiso/components/municipio/provincias.html', context)
@@ -1133,8 +1151,8 @@ class RptPaqueteCompromiso(TemplateView):
         provincia = request.GET.get('provincia', '')
         distrito = request.GET.get('distrito', '')
         p_red = request.GET.get('red', '')
-        p_microredes = ''
-        p_establecimiento = ''
+        p_microredes = request.GET.get('p_microredes', '')
+        p_establecimiento = request.GET.get('p_establecimiento', '')
         p_cumple = request.GET.get('cumple', '') 
 
         # Creación de la consulta
