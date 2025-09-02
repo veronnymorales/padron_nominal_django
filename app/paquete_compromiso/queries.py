@@ -505,6 +505,7 @@ def obtener_variables_paquete_compromiso(anio, mes_inicio, mes_fin, provincia, d
         return []
 
 
+
 def obtener_ranking_paquete_compromiso(anio, mes, red, microred, establecimiento, provincia, distrito):
     with connection.cursor() as cursor:
         # Base query with aggregation
@@ -1113,6 +1114,202 @@ def obtener_cobertura_por_establecimiento(anio, mes, red_h, p_microredes_estable
 #############################
 ## REPORTES EN EXCEL EN SALUD
 #############################
+
+def obtener_seguimiento_paquete_compromiso(anio, mes_inicio, mes_fin, provincia, distrito, p_red, p_microredes, p_establecimiento, p_cumple):
+    try:
+        with connection.cursor() as cursor:
+            
+            sql_query = '''
+                SELECT
+                    tipo_doc,
+                    num_doc,
+                    CONVERT(VARCHAR(10), fecha_nac, 103) AS fecha_nac,
+                    sexo,
+                    seguro,
+                    edad_dias,
+                    edad_mes,
+                    flag_cnv,
+                    peso_cnv,
+                    flag_BPN,
+                    Semana_gest_cnv,
+                    flag_prematuro,
+                    flag_BPN_Prematuro,
+                    flag_indicador,
+                    numerador_sinDNI,
+                    num_cred,
+                    num_cred_rn,
+                    CONVERT(VARCHAR(10), fecha_cred_rn1, 103) AS fecha_cred_rn1,
+                    num_cred_rn1,
+                    CONVERT(VARCHAR(10), fecha_cred_rn2, 103) AS fecha_cred_rn2,
+                    num_cred_rn2,
+                    CONVERT(VARCHAR(10), fecha_cred_rn3, 103) AS fecha_cred_rn3,
+                    num_cred_rn3,
+                    CONVERT(VARCHAR(10), fecha_cred_rn4, 103) AS fecha_cred_rn4,
+                    num_cred_rn4,
+                    num_cred_mensual,
+                    CONVERT(VARCHAR(10), fecha_cred_mes1, 103) AS fecha_cred_mes1,
+                    num_cred_mes1,
+                    CONVERT(VARCHAR(10), fecha_cred_mes2, 103) AS fecha_cred_mes2,
+                    num_cred_mes2,
+                    CONVERT(VARCHAR(10), fecha_cred_mes3, 103) AS fecha_cred_mes3,
+                    num_cred_mes3,
+                    CONVERT(VARCHAR(10), fecha_cred_mes4, 103) AS fecha_cred_mes4,
+                    num_cred_mes4,
+                    CONVERT(VARCHAR(10), fecha_cred_mes5, 103) AS fecha_cred_mes5,
+                    num_cred_mes5,
+                    CONVERT(VARCHAR(10), fecha_cred_mes6, 103) AS fecha_cred_mes6,
+                    num_cred_mes6,
+                    CONVERT(VARCHAR(10), fecha_cred_mes7, 103) AS fecha_cred_mes7,
+                    num_cred_mes7,
+                    CONVERT(VARCHAR(10), fecha_cred_mes8, 103) AS fecha_cred_mes8,
+                    num_cred_mes8,
+                    CONVERT(VARCHAR(10), fecha_cred_mes9, 103) AS fecha_cred_mes9,
+                    num_cred_mes9,
+                    CONVERT(VARCHAR(10), fecha_cred_mes10, 103) AS fecha_cred_mes10,
+                    num_cred_mes10,
+                    CONVERT(VARCHAR(10), fecha_cred_mes11, 103) AS fecha_cred_mes11,
+                    num_cred_mes11,
+                    num_vac,
+                    num_vac_antineumococica,
+                    CONVERT(VARCHAR(10), fecha_vac_antineumococica1, 103) AS fecha_vac_antineumococica1,
+                    num_vac_antineumococica1,
+                    CONVERT(VARCHAR(10), fecha_vac_antineumococica2, 103) AS fecha_vac_antineumococica2,
+                    num_vac_antineumococica2,
+                    num_vac_antipolio,
+                    CONVERT(VARCHAR(10), fecha_vac_antipolio1, 103) AS fecha_vac_antipolio1,
+                    num_vac_antipolio1,
+                    CONVERT(VARCHAR(10), fecha_vac_antipolio2, 103) AS fecha_vac_antipolio2,
+                    num_vac_antipolio2,
+                    CONVERT(VARCHAR(10), fecha_vac_antipolio3, 103) AS fecha_vac_antipolio3,
+                    num_vac_antipolio3,
+                    num_vac_pentavalente,
+                    CONVERT(VARCHAR(10), fecha_vac_pentavalente1, 103) AS fecha_vac_pentavalente1,
+                    num_vac_pentavalente1,
+                    CONVERT(VARCHAR(10), fecha_vac_pentavalente2, 103) AS fecha_vac_pentavalente2,
+                    num_vac_pentavalente2,
+                    CONVERT(VARCHAR(10), fecha_vac_pentavalente3, 103) AS fecha_vac_pentavalente3,
+                    num_vac_pentavalente3,
+                    num_vac_rotavirus,
+                    CONVERT(VARCHAR(10), fecha_vac_rotavirus1, 103) AS fecha_vac_rotavirus1,
+                    num_vac_rotavirus1,
+                    CONVERT(VARCHAR(10), fecha_vac_rotavirus2, 103) AS fecha_vac_rotavirus2,
+                    num_vac_rotavirus2,
+                    num_esq,
+                    num_esq4M,
+                    CONVERT(VARCHAR(10), fecha_Esq4m_sup_E1, 103) AS fecha_Esq4m_sup_E1,
+                    num_Esq4m_sup_E1,
+                    num_esq6M,
+                    num_esq6M_sup,
+                    CONVERT(VARCHAR(10), fecha_Esq6m_sup_E1, 103) AS fecha_Esq6m_sup_E1,
+                    num_Esq6m_sup_E1,
+                    CONVERT(VARCHAR(10), fecha_Esq6m_sup_E2, 103) AS fecha_Esq6m_sup_E2,
+                    num_Esq6m_sup_E2,
+                    num_esq6M_trat,
+                    CONVERT(VARCHAR(10), fecha_Esq6m_trat_E1, 103) AS fecha_Esq6m_trat_E1,
+                    num_Esq6m_trat_E1,
+                    CONVERT(VARCHAR(10), fecha_Esq6m_trat_E2, 103) AS fecha_Esq6m_trat_E2,
+                    num_Esq6m_trat_E2,
+                    CONVERT(VARCHAR(10), fecha_Esq6m_trat_E3, 103) AS fecha_Esq6m_trat_E3,
+                    num_Esq6m_trat_E3,
+                    num_esq6M_multi,
+                    CONVERT(VARCHAR(10), fecha_Esq6m_multi_E1, 103) AS fecha_Esq6m_multi_E1,
+                    num_Esq6m_multi_E1,
+                    CONVERT(VARCHAR(10), fecha_Esq6m_multi_E2, 103) AS fecha_Esq6m_multi_E2,
+                    num_Esq6m_multi_E2,
+                    CONVERT(VARCHAR(10), fecha_Esq6m_multi_E3, 103) AS fecha_Esq6m_multi_E3,
+                    num_Esq6m_multi_E3,
+                    CONVERT(VARCHAR(10), fecha_Esq6m_multi_E4, 103) AS fecha_Esq6m_multi_E4,
+                    num_Esq6m_multi_E4,
+                    CONVERT(VARCHAR(10), fecha_Esq6m_multi_E5, 103) AS fecha_Esq6m_multi_E5,
+                    num_Esq6m_multi_E5,
+                    CONVERT(VARCHAR(10), fecha_Esq6m_multi_E6, 103) AS fecha_Esq6m_multi_E6,
+                    num_Esq6m_multi_E6,
+                    num_dosaje_Hb,
+                    CONVERT(VARCHAR(10), fecha_Hb, 103) AS fecha_Hb,
+                    num_Hb,
+                    num_DNIemision,
+                    CONVERT(VARCHAR(10), fecha_DNIemision, 103) AS fecha_DNIemision,
+                    num_DNIemision_30d,
+                    num_DNIemision_60d,
+                    CASE mes
+                        WHEN 1 THEN 'ENERO' WHEN 2 THEN 'FEBRERO' WHEN 3 THEN 'MARZO' WHEN 4 THEN 'ABRIL'
+                        WHEN 5 THEN 'MAYO' WHEN 6 THEN 'JUNIO' WHEN 7 THEN 'JULIO' WHEN 8 THEN 'AGOSTO'
+                        WHEN 9 THEN 'SETIEMBRE' WHEN 10 THEN 'OCTUBRE' WHEN 11 THEN 'NOVIEMBRE' WHEN 12 THEN 'DICIEMBRE'
+                    END AS mes_nombre,
+                    CASE WHEN numerador = '1' THEN 'CUMPLE' ELSE 'NO CUMPLE' END AS IND,
+                    Ubigueo_Establecimiento,
+                    Provincia,
+                    Distrito,
+                    Red,
+                    MicroRed,
+                    Id_Establecimiento,
+                    Nombre_Establecimiento
+            FROM 
+                Compromiso_1.DBO.PAQUETE_COMPROMISO
+            '''
+            params = []
+            conditions = []
+            
+            # Agregar filtros de año
+            if anio:
+                conditions.append("año = %s")
+                params.append(anio)
+
+            # Agregar filtro de mes con BETWEEN
+            if mes_inicio and mes_fin:
+                conditions.append("mes BETWEEN %s AND %s")
+                params.append(mes_inicio)
+                params.append(mes_fin)
+            elif mes_inicio:
+                conditions.append("mes = %s")
+                params.append(mes_inicio)
+            
+            # Filtros de ubicación geográfica - usando LIKE para códigos de ubigeo
+            if provincia and provincia != '':
+                conditions.append("LEFT(Ubigueo_Establecimiento, 4) = %s")
+                params.append(provincia)
+            
+            if distrito and distrito != '':
+                conditions.append("Ubigueo_Establecimiento = %s")
+                params.append(distrito)
+                
+            # Filtros de salud - usando LIKE para códigos de ubigeo    
+            if p_red and p_red != '':
+                conditions.append("LEFT(Codigo_Red, 2) = %s")
+                params.append(p_red)
+            
+            if p_microredes and p_microredes != '':
+                conditions.append("LEFT(Codigo_MicroRed, 4) = %s")
+                params.append(p_microredes)
+            
+            if p_establecimiento and p_establecimiento != '':
+                conditions.append("Id_Establecimiento = %s")
+                params.append(p_establecimiento)
+            
+            # Agregar filtro de cumplimiento del indicador
+            if p_cumple == '1':
+                conditions.append("ts.numerador = '1'")
+            elif p_cumple == '0':
+                conditions.append("ts.numerador <> '1'")
+            # Si p_cumple = '' no se agrega filtro (todos los registros)            
+            # Agregar WHERE solo si hay condiciones
+            if conditions:
+                sql_query += " WHERE " + " AND ".join(conditions)
+            
+            cursor.execute(sql_query, params)
+            resultados = cursor.fetchall()
+            column_names = [desc[0] for desc in cursor.description]
+            datos = [dict(zip(column_names, fila)) for fila in resultados]
+            
+            print(f"[QUERY] SQL: {sql_query.strip()}")
+            print(f"[QUERY] Parámetros: {params}")
+            
+        return datos
+    except Exception as e:
+        return []
+
+
+### --- 
 def obtener_seguimiento_paquete_compromiso_red(departamento, red, edad, cumple):
     """
     Función para obtener datos del seguimiento del padrón nominal filtrados por ubicación, edad y cumplimiento.

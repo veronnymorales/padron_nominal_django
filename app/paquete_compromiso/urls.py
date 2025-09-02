@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import index_paquete_compromiso
 
-from .views import index_paquete_compromiso, get_redes_paquete_compromiso, RptPnPoblacionRed
+from .views import index_paquete_compromiso, get_redes_paquete_compromiso, RptPaqueteCompromiso
 from .views import get_microredes_paquete_compromiso, p_microredes_paquete_compromiso, RptPnPoblacionMicroRed
 from .views import get_establecimientos_paquete_compromiso, p_microredes_establec_paquete_compromiso, p_establecimientos_paquete_compromiso, RptPnPoblacionEstablec
 from .views import get_establecimientos_paquete_compromiso_h, p_microredes_establec_paquete_compromiso_h, p_establecimientos_paquete_compromiso_h, p_distritos_paquete_compromiso_h
@@ -24,7 +24,7 @@ urlpatterns = [
     # redes
     path('get_redes_paquete_compromiso/<int:redes_id>/', get_redes_paquete_compromiso, name='get_redes_paquete_compromiso'),
     #-- redes excel
-    path('rpt_paquete_compromiso_red_excel/', RptPnPoblacionRed.as_view(), name = 'rpt_paquete_compromiso_red_xls'),
+    path('rpt_paquete_compromiso_red_excel/', RptPaqueteCompromiso.as_view(), name = 'rpt_paquete_compromiso_red_xls'),
     
     # microredes
     path('get_microredes_paquete_compromiso/<int:microredes_id>/', get_microredes_paquete_compromiso, name='get_microredes_paquete_compromiso'),
