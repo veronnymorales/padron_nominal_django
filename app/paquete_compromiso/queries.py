@@ -1288,9 +1288,9 @@ def obtener_seguimiento_paquete_compromiso(anio, mes_inicio, mes_fin, provincia,
             
             # Agregar filtro de cumplimiento del indicador
             if p_cumple == '1':
-                conditions.append("ts.numerador = '1'")
+                conditions.append("numerador = '1'")
             elif p_cumple == '0':
-                conditions.append("ts.numerador <> '1'")
+                conditions.append("numerador <> '1'")
             # Si p_cumple = '' no se agrega filtro (todos los registros)            
             # Agregar WHERE solo si hay condiciones
             if conditions:

@@ -1097,17 +1097,17 @@ def get_distritos_paquete_compromiso(request, distrito_id):
     )
     mes_inicio = (
                 DimPeriodo
-                .objects.filter(Anio='2024')
-                .annotate(periodo_filtrado=Substr('Periodo', 1, 6))
-                .values('Mes','periodo_filtrado')
+                .objects.filter()
+                .annotate(nro_mes=Cast('NroMes', IntegerField())) 
+                .values('Mes','nro_mes')
                 .order_by('NroMes')
                 .distinct()
     ) 
     mes_fin = (
                 DimPeriodo
-                .objects.filter(Anio='2024')
-                .annotate(periodo_filtrado=Substr('Periodo', 1, 6))
-                .values('Mes','periodo_filtrado')
+                .objects.filter()
+                .annotate(nro_mes=Cast('NroMes', IntegerField())) 
+                .values('Mes','nro_mes')
                 .order_by('NroMes')
                 .distinct()
     ) 
