@@ -158,6 +158,18 @@ window.renderChartAvanceVariables = function(data, params) {
                     fontSize: 8,
                     color: 'black',
                     fontWeight: 'bold'
+                },
+                markLine: {
+                    symbol: 'none',
+                    lineStyle: { type: 'dashed', color: 'red' },
+                    data: [{ yAxis: 75, name: 'M' }],
+                    label: { 
+                        show: true, 
+                        formatter: `M: 75%`, 
+                        position: 'end', 
+                        offset: [0, -14], 
+                        textStyle: { fontSize: 8 } 
+                    }
                 }
             }]
         };
@@ -209,6 +221,9 @@ window.renderChartAvanceVariables = function(data, params) {
                 const dataItem = { value: value, numerator: numerator };
                 if (index === 0) {
                     dataItem.itemStyle = { color: specialColor };
+                }
+                if (item.title === 'SUP 6M TRAT.' || item.title === 'SUP 6M MULTI.') {
+                    dataItem.itemStyle = { color: '#0ca8df' };
                 }
                 return dataItem;
             });

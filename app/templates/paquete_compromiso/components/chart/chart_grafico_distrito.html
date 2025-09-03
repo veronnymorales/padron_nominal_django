@@ -79,7 +79,17 @@ window.renderChartDistrito = function(data, params) {
             series: [{
                 name: "Cobertura",
                 type: "bar",
-                data: d_cob,
+                data: d_cob.map(value => {
+                    let color;
+                    if (value >= 75) {
+                        color = '#28a745';
+                    } else if (value >= 65) {
+                        color = '#fd7e14';
+                    } else {
+                        color = '#dc3545';
+                    }
+                    return { value: value, itemStyle: { color: color } };
+                }),
                 label: {
                     show: true,
                     position: "right",
@@ -87,7 +97,16 @@ window.renderChartDistrito = function(data, params) {
                     fontSize: 10,
                     color: "#000",
                 },
-                itemStyle: { color: "#91cc75" },
+                markLine: {
+                    symbol: 'none',
+                    lineStyle: { type: 'dashed', color: 'red' },
+                    data: [{ xAxis: 75, name: 'Meta' }],
+                    label: {
+                        show: true,
+                        formatter: 'Meta: 75%',
+                        position: 'insideStartTop'
+                    }
+                }
             }],
         };
         myChart.setOption(option);
