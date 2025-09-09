@@ -29,4 +29,6 @@ urlpatterns = [
     path('', include('pn_poblacion.urls')),
     ## PAQUETE COMPROMISO
     path('', include('paquete_compromiso.urls')), 
+    ## INDICADOR COMPROMISO
+    path('', include('compromiso_indicador.urls')),
 ]

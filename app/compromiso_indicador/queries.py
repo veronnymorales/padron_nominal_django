@@ -12,7 +12,7 @@ def obtener_distritos(provincia):
     return list(distritos)
 
 ## VELOCIMETRO DETALLADOS
-def obtener_avance_paquete_compromiso(anio, mes_inicio, mes_fin, provincia, distrito):
+def obtener_avance_compromiso_indicador(anio, mes_inicio, mes_fin, provincia, distrito):
     try:
         with connection.cursor() as cursor:
             #print(f"[QUERY] Parámetros - Año: {anio}, Mes: {mes_inicio}-{mes_fin}, Provincia: {provincia}, Distrito: {distrito}")
@@ -29,7 +29,7 @@ def obtener_avance_paquete_compromiso(anio, mes_inicio, mes_fin, provincia, dist
                         )
                     END AS avance
                 FROM 
-                    Compromiso_1.dbo.paquete_compromiso
+                    Compromiso_1.dbo.indicador_compromiso_sin_anemia
             '''
             params = []
             conditions = []
@@ -78,11 +78,11 @@ def obtener_avance_paquete_compromiso(anio, mes_inicio, mes_fin, provincia, dist
         return []
 
 ## RESUMEN NUMERADOR Y DENOMINADOR 
-def obtener_resumen_paquete_compromiso(anio, mes_inicio, mes_fin, provincia, distrito):
+def obtener_resumen_compromiso_indicador(anio, mes_inicio, mes_fin, provincia, distrito):
     """
     Obtiene un resumen detallado del paquete compromiso con información adicional
     """
-    datos_base = obtener_avance_paquete_compromiso(anio, mes_inicio, mes_fin, provincia, distrito)
+    datos_base = obtener_avance_compromiso_indicador(anio, mes_inicio, mes_fin, provincia, distrito)
     
     if not datos_base:
         return None
@@ -125,7 +125,7 @@ def obtener_resumen_paquete_compromiso(anio, mes_inicio, mes_fin, provincia, dis
     return resumen
 
 ## AVANCE REGIONAL MENSUALIZADO
-def obtener_avance_regional_mensual_paquete_compromiso(anio, mes_inicio, mes_fin, provincia, distrito):
+def obtener_avance_regional_mensual_compromiso_indicador(anio, mes_inicio, mes_fin, provincia, distrito):
     try:
         with connection.cursor() as cursor:
             sql_query = '''
@@ -286,7 +286,7 @@ def obtener_avance_regional_mensual_paquete_compromiso(anio, mes_inicio, mes_fin
                                 ) * 100
                             , 2)
                         END AS cob_12
-                    FROM Compromiso_1.dbo.paquete_compromiso
+                    FROM Compromiso_1.dbo.indicador_compromiso_sin_anemia
             '''
             params = []
             conditions = []
@@ -320,150 +320,51 @@ def obtener_avance_regional_mensual_paquete_compromiso(anio, mes_inicio, mes_fin
         return []
 
 ## VARIABLES DETALLADOS
-def obtener_variables_paquete_compromiso(anio, mes_inicio, mes_fin, provincia, distrito):
+def obtener_variables_compromiso_indicador(anio, mes_inicio, mes_fin, provincia, distrito):
     try:
         with connection.cursor() as cursor:
             
             sql_query = '''
                     SELECT 
-                        -- ind cred
-                        SUM(ISNULL(CAST(denominador AS INT), 0)) AS den_variable,
-                        SUM(ISNULL(CAST(num_cred AS INT), 0)) AS num_cred,
-                    	    CASE 
-                    	    WHEN SUM(ISNULL(CAST(denominador AS INT), 0)) = 0 THEN 0.0
-                    	    ELSE ROUND(
-                    	        (SUM(ISNULL(CAST(num_cred AS INT), 0)) * 100.0) / 
-                    	        SUM(ISNULL(CAST(denominador AS INT), 0)), 2
-                    	    )
-                    	END AS avance_cred,
-                    	-- cred rn
-                        SUM(ISNULL(CAST(num_cred_rn AS INT), 0)) AS num_cred_rn,
-                    	CASE 
-                    	   WHEN SUM(ISNULL(CAST(denominador AS INT), 0)) = 0 THEN 0.0
-                    	   ELSE ROUND(
-                    	       (SUM(ISNULL(CAST(num_cred_rn AS INT), 0)) * 100.0) / 
-                    	       SUM(ISNULL(CAST(denominador AS INT), 0)), 2
-                    	   )
-                    	END AS avance_cred_rn,
-                    	-- cred mensual
-                        SUM(ISNULL(CAST(num_cred_mensual AS INT), 0)) AS num_cred_mensual,
-                    	CASE 
-                    	   WHEN SUM(ISNULL(CAST(denominador AS INT), 0)) = 0 THEN 0.0
-                    	   ELSE ROUND(
-                    	       (SUM(ISNULL(CAST(num_cred_mensual AS INT), 0)) * 100.0) / 
-                    	       SUM(ISNULL(CAST(denominador AS INT), 0)), 2
-                    	   )
-                    	END AS avance_cred_mensual,
-                    	-- ind vac
-                    	SUM(ISNULL(CAST(num_vac AS INT), 0)) AS num_vac,
-                    	CASE 
-                    	   WHEN SUM(ISNULL(CAST(denominador AS INT), 0)) = 0 THEN 0.0
-                    	   ELSE ROUND(
-                    	       (SUM(ISNULL(CAST(num_vac AS INT), 0)) * 100.0) / 
-                    	       SUM(ISNULL(CAST(denominador AS INT), 0)), 2
-                    	   )
-                    	END AS avance_vac,
-                    	-- vac antineumococica
-                    	SUM(ISNULL(CAST(num_vac_antineumococica AS INT), 0)) AS num_vac_antineumococica,
-                    	CASE 
-                    	   WHEN SUM(ISNULL(CAST(denominador AS INT), 0)) = 0 THEN 0.0
-                    	   ELSE ROUND(
-                    	       (SUM(ISNULL(CAST(num_vac_antineumococica AS INT), 0)) * 100.0) / 
-                    	       SUM(ISNULL(CAST(denominador AS INT), 0)), 2
-                    	   )
-                    	END AS avance_vac_antineumococica,
-                    	-- vac antipolio
-                    	SUM(ISNULL(CAST(num_vac_antipolio AS INT), 0)) AS num_vac_antipolio,
-                    	CASE 
-                    	   WHEN SUM(ISNULL(CAST(denominador AS INT), 0)) = 0 THEN 0.0
-                    	   ELSE ROUND(
-                    	       (SUM(ISNULL(CAST(num_vac_antipolio AS INT), 0)) * 100.0) / 
-                    	       SUM(ISNULL(CAST(denominador AS INT), 0)), 2
-                    	   )
-                    	END AS avance_vac_antipolio,
-                    	-- vac pentavalente
-                    	SUM(ISNULL(CAST(num_vac_pentavalente AS INT), 0)) AS num_vac_pentavalente,
-                    	CASE 
-                    	   WHEN SUM(ISNULL(CAST(denominador AS INT), 0)) = 0 THEN 0.0
-                    	   ELSE ROUND(
-                    	       (SUM(ISNULL(CAST(num_vac_pentavalente AS INT), 0)) * 100.0) / 
-                    	       SUM(ISNULL(CAST(denominador AS INT), 0)), 2
-                    	   )
-                    	END AS avance_vac_pentavalente,
-                    	-- vac rotavirus
-                    	SUM(ISNULL(CAST(num_vac_rotavirus AS INT), 0)) AS num_vac_rotavirus,
-                    	CASE 
-                    	   WHEN SUM(ISNULL(CAST(denominador AS INT), 0)) = 0 THEN 0.0
-                    	   ELSE ROUND(
-                    	       (SUM(ISNULL(CAST(num_vac_rotavirus AS INT), 0)) * 100.0) / 
-                    	       SUM(ISNULL(CAST(denominador AS INT), 0)), 2
-                    	   )
-                    	END AS avance_vac_rotavirus,
-                    	-- esq suplementacion 
-                    	SUM(ISNULL(CAST(num_esq AS INT), 0)) AS num_esq,
-                    	CASE 
-                    	   WHEN SUM(ISNULL(CAST(denominador AS INT), 0)) = 0 THEN 0.0
-                    	   ELSE ROUND(
-                    	       (SUM(ISNULL(CAST(num_esq AS INT), 0)) * 100.0) / 
-                    	       SUM(ISNULL(CAST(denominador AS INT), 0)), 2
-                    	   )
-                    	END AS avance_esq,
-                    	-- esq4M 
-                    	SUM(ISNULL(CAST(num_esq4M AS INT), 0)) AS num_esq4M,
-                    	CASE 
-                    	   WHEN SUM(ISNULL(CAST(denominador AS INT), 0)) = 0 THEN 0.0
-                    	   ELSE ROUND(
-                    	       (SUM(ISNULL(CAST(num_esq4M AS INT), 0)) * 100.0) / 
-                    	       SUM(ISNULL(CAST(denominador AS INT), 0)), 2
-                    	   )
-                    	END AS avance_esq4M,
-                    	-- esq6M
-                    	SUM(ISNULL(CAST(num_esq6M AS INT), 0)) AS num_esq6M,
-                    	CASE 
-                    	   WHEN SUM(ISNULL(CAST(denominador AS INT), 0)) = 0 THEN 0.0
-                    	   ELSE ROUND(
-                    	       (SUM(ISNULL(CAST(num_esq6M AS INT), 0)) * 100.0) / 
-                    	       SUM(ISNULL(CAST(denominador AS INT), 0)), 2
-                    	   )
-                    	END AS avance_esq6M,
-                    	-- num_esq6M_trat
-                    	SUM(ISNULL(CAST(num_esq6M_trat AS INT), 0)) AS num_esq6M_trat,
-                    	CASE 
-                    	   WHEN SUM(ISNULL(CAST(denominador AS INT), 0)) = 0 THEN 0.0
-                    	   ELSE ROUND(
-                    	       (SUM(ISNULL(CAST(num_esq6M_trat AS INT), 0)) * 100.0) / 
-                    	       SUM(ISNULL(CAST(denominador AS INT), 0)), 2
-                    	   )
-                    	END AS avance_esq6M_trat,
-                    	-- num_esq6M_multi
-                    	SUM(ISNULL(CAST(num_esq6M_multi AS INT), 0)) AS num_esq6M_multi,
-                    	CASE 
-                    	   WHEN SUM(ISNULL(CAST(denominador AS INT), 0)) = 0 THEN 0.0
-                    	   ELSE ROUND(
-                    	       (SUM(ISNULL(CAST(num_esq6M_multi AS INT), 0)) * 100.0) / 
-                    	       SUM(ISNULL(CAST(denominador AS INT), 0)), 2
-                    	   )
-                    	END AS avance_esq6M_multi,
-                    	-- num_dosaje_Hb
-                    	SUM(ISNULL(CAST(num_dosaje_Hb AS INT), 0)) AS num_dosaje_Hb,
-                    	CASE 
-                    	   WHEN SUM(ISNULL(CAST(denominador AS INT), 0)) = 0 THEN 0.0
-                    	   ELSE ROUND(
-                    	       (SUM(ISNULL(CAST(num_dosaje_Hb AS INT), 0)) * 100.0) / 
-                    	       SUM(ISNULL(CAST(denominador AS INT), 0)), 2
-                    	   )
-                    	END AS avance_num_dosaje_Hb,
-                    	-- num_DNIemision
-                    	SUM(ISNULL(CAST(num_DNIemision AS INT), 0)) AS num_DNIemision,
-                    	CASE 
-                    	   WHEN SUM(ISNULL(CAST(denominador AS INT), 0)) = 0 THEN 0.0
-                    	   ELSE ROUND(
-                    	       (SUM(ISNULL(CAST(num_DNIemision AS INT), 0)) * 100.0) / 
-                    	       SUM(ISNULL(CAST(denominador AS INT), 0)), 2
-                    	   )
-                    	END AS avance_DNIemision
+                    -- ind suplementacion
+                    SUM(ISNULL(CAST(denominador AS INT), 0)) AS den_variable,
+                    SUM(ISNULL(CAST(num_sup_ta AS INT), 0)) AS num_sup_ta,
+                        CASE 
+                        WHEN SUM(ISNULL(CAST(denominador AS INT), 0)) = 0 THEN 0.0
+                        ELSE ROUND(
+                            (SUM(ISNULL(CAST(num_sup_ta AS INT), 0)) * 100.0) / 
+                            SUM(ISNULL(CAST(denominador AS INT), 0)), 2
+                        )
+                    END AS avance_sup_ta,
+                    -- 1° dosaje rn
+                    SUM(ISNULL(CAST(num_hb AS INT), 0)) AS num_hb,
+                    CASE 
+                        WHEN SUM(ISNULL(CAST(denominador AS INT), 0)) = 0 THEN 0.0
+                        ELSE ROUND(
+                           (SUM(ISNULL(CAST(num_hb AS INT), 0)) * 100.0) / 
+                            SUM(ISNULL(CAST(denominador AS INT), 0)), 2
+                        )
+                    END AS avance_hb,
+                    -- 2° dosaje
+                    SUM(ISNULL(CAST(num_hb_12m AS INT), 0)) AS num_hb_12m,
+                    CASE 
+                        WHEN SUM(ISNULL(CAST(denominador AS INT), 0)) = 0 THEN 0.0
+                        ELSE ROUND(
+                            (SUM(ISNULL(CAST(num_hb_12m AS INT), 0)) * 100.0) / 
+                            SUM(ISNULL(CAST(denominador AS INT), 0)), 2
+                        )
+                    END AS avance_hb_12m,
+                    -- Sesion Demostrativa
+                    SUM(ISNULL(CAST(num_sesion AS INT), 0)) AS num_sesion,
+                    CASE 
+                        WHEN SUM(ISNULL(CAST(denominador AS INT), 0)) = 0 THEN 0.0
+                        ELSE ROUND(
+                           (SUM(ISNULL(CAST(num_sesion AS INT), 0)) * 100.0) / 
+                            SUM(ISNULL(CAST(denominador AS INT), 0)), 2
+                        )
+                    END AS avance_sesion
                     FROM 
-                        Compromiso_1.dbo.paquete_compromiso
+                        Compromiso_1.dbo.indicador_compromiso_sin_anemia
             '''
             params = []
             conditions = []
@@ -506,7 +407,7 @@ def obtener_variables_paquete_compromiso(anio, mes_inicio, mes_fin, provincia, d
 
 
 
-def obtener_ranking_paquete_compromiso(anio, mes, red, microred, establecimiento, provincia, distrito):
+def obtener_ranking_compromiso_indicador(anio, mes, red, microred, establecimiento, provincia, distrito):
     with connection.cursor() as cursor:
         # Base query with aggregation
         sql_query = """
@@ -557,7 +458,7 @@ def obtener_ranking_paquete_compromiso(anio, mes, red, microred, establecimiento
         return result
 
 ## AVANCE REGIONAL
-def obtener_avance_regional_paquete_compromiso():
+def obtener_avance_regional_compromiso_indicador():
     try:
         # Asegúrate de que la conexión a la base de datos está establecida
         with connection.cursor() as cursor:
@@ -611,7 +512,7 @@ def obtener_cobertura_por_zona(anio, mes_inicio, mes_fin, provincia, distrito):
                                 WHEN SUM(ISNULL(denominador, 0)) = 0 THEN 0
                                 ELSE ROUND((SUM(ISNULL(numerador, 0)) * 100.0) / SUM(ISNULL(denominador, 0)), 2)
                             END as z_cob  
-                        FROM [Compromiso_1].[dbo].[paquete_compromiso]
+                        FROM [Compromiso_1].[dbo].[indicador_compromiso_sin_anemia]
             '''
             params = []
             conditions = []
@@ -673,7 +574,7 @@ def obtener_cobertura_por_provincia(anio, mes_inicio, mes_fin, provincia, distri
                             WHEN SUM(ISNULL(denominador, 0)) = 0 THEN 0
                             ELSE ROUND((SUM(ISNULL(numerador, 0)) * 100.0) / SUM(ISNULL(denominador, 0)), 2)
                         END as p_cob  
-                    FROM [Compromiso_1].[dbo].[paquete_compromiso]
+                    FROM [Compromiso_1].[dbo].[indicador_compromiso_sin_anemia]
             '''
             params = []
             conditions = []
@@ -735,7 +636,7 @@ def obtener_cobertura_por_distrito(anio, mes_inicio, mes_fin, provincia, distrit
                             WHEN SUM(ISNULL(denominador, 0)) = 0 THEN 0
                             ELSE ROUND((SUM(ISNULL(numerador, 0)) * 100.0) / SUM(ISNULL(denominador, 0)), 2)
                         END as d_cob  
-                    FROM [Compromiso_1].[dbo].[paquete_compromiso]
+                    FROM [Compromiso_1].[dbo].[indicador_compromiso_sin_anemia]
             '''
             params = []
             conditions = []
@@ -792,7 +693,7 @@ def dictfetchall(cursor):
     return [dict(zip(columns, row)) for row in cursor.fetchall()]
 
 
-def obtener_avance_cobertura_paquete_compromiso(anio, mes, red_h, p_microredes_establec_h, p_establecimiento_h, provincia, distrito):
+def obtener_avance_cobertura_compromiso_indicador(anio, mes, red_h, p_microredes_establec_h, p_establecimiento_h, provincia, distrito):
     """
     Obtiene los datos de cobertura de población, agrupados por red, microred y establecimiento,
     con cálculos agregados y el porcentaje de cobertura para cada grupo.
@@ -1115,137 +1016,56 @@ def obtener_cobertura_por_establecimiento(anio, mes, red_h, p_microredes_estable
 ## REPORTES EN EXCEL EN SALUD
 #############################
 
-def obtener_seguimiento_paquete_compromiso(anio, mes_inicio, mes_fin, provincia, distrito, p_red, p_microredes, p_establecimiento, p_cumple):
+def obtener_seguimiento_compromiso_indicador(anio, mes_inicio, mes_fin, provincia, distrito, p_red, p_microredes, p_establecimiento, p_cumple):
     try:
         with connection.cursor() as cursor:
             
             sql_query = '''
-                SELECT
-                    tipo_doc,
-                    num_doc,
-                    CONVERT(VARCHAR(10), fecha_nac, 103) AS fecha_nac,
-                    sexo,
-                    seguro,
-                    edad_dias,
-                    edad_mes,
-                    flag_cnv,
-                    peso_cnv,
-                    flag_BPN,
-                    Semana_gest_cnv,
-                    flag_prematuro,
-                    flag_BPN_Prematuro,
-                    flag_indicador,
-                    numerador_sinDNI,
-                    num_cred,
-                    num_cred_rn,
-                    CONVERT(VARCHAR(10), fecha_cred_rn1, 103) AS fecha_cred_rn1,
-                    num_cred_rn1,
-                    CONVERT(VARCHAR(10), fecha_cred_rn2, 103) AS fecha_cred_rn2,
-                    num_cred_rn2,
-                    CONVERT(VARCHAR(10), fecha_cred_rn3, 103) AS fecha_cred_rn3,
-                    num_cred_rn3,
-                    CONVERT(VARCHAR(10), fecha_cred_rn4, 103) AS fecha_cred_rn4,
-                    num_cred_rn4,
-                    num_cred_mensual,
-                    CONVERT(VARCHAR(10), fecha_cred_mes1, 103) AS fecha_cred_mes1,
-                    num_cred_mes1,
-                    CONVERT(VARCHAR(10), fecha_cred_mes2, 103) AS fecha_cred_mes2,
-                    num_cred_mes2,
-                    CONVERT(VARCHAR(10), fecha_cred_mes3, 103) AS fecha_cred_mes3,
-                    num_cred_mes3,
-                    CONVERT(VARCHAR(10), fecha_cred_mes4, 103) AS fecha_cred_mes4,
-                    num_cred_mes4,
-                    CONVERT(VARCHAR(10), fecha_cred_mes5, 103) AS fecha_cred_mes5,
-                    num_cred_mes5,
-                    CONVERT(VARCHAR(10), fecha_cred_mes6, 103) AS fecha_cred_mes6,
-                    num_cred_mes6,
-                    CONVERT(VARCHAR(10), fecha_cred_mes7, 103) AS fecha_cred_mes7,
-                    num_cred_mes7,
-                    CONVERT(VARCHAR(10), fecha_cred_mes8, 103) AS fecha_cred_mes8,
-                    num_cred_mes8,
-                    CONVERT(VARCHAR(10), fecha_cred_mes9, 103) AS fecha_cred_mes9,
-                    num_cred_mes9,
-                    CONVERT(VARCHAR(10), fecha_cred_mes10, 103) AS fecha_cred_mes10,
-                    num_cred_mes10,
-                    CONVERT(VARCHAR(10), fecha_cred_mes11, 103) AS fecha_cred_mes11,
-                    num_cred_mes11,
-                    num_vac,
-                    num_vac_antineumococica,
-                    CONVERT(VARCHAR(10), fecha_vac_antineumococica1, 103) AS fecha_vac_antineumococica1,
-                    num_vac_antineumococica1,
-                    CONVERT(VARCHAR(10), fecha_vac_antineumococica2, 103) AS fecha_vac_antineumococica2,
-                    num_vac_antineumococica2,
-                    num_vac_antipolio,
-                    CONVERT(VARCHAR(10), fecha_vac_antipolio1, 103) AS fecha_vac_antipolio1,
-                    num_vac_antipolio1,
-                    CONVERT(VARCHAR(10), fecha_vac_antipolio2, 103) AS fecha_vac_antipolio2,
-                    num_vac_antipolio2,
-                    CONVERT(VARCHAR(10), fecha_vac_antipolio3, 103) AS fecha_vac_antipolio3,
-                    num_vac_antipolio3,
-                    num_vac_pentavalente,
-                    CONVERT(VARCHAR(10), fecha_vac_pentavalente1, 103) AS fecha_vac_pentavalente1,
-                    num_vac_pentavalente1,
-                    CONVERT(VARCHAR(10), fecha_vac_pentavalente2, 103) AS fecha_vac_pentavalente2,
-                    num_vac_pentavalente2,
-                    CONVERT(VARCHAR(10), fecha_vac_pentavalente3, 103) AS fecha_vac_pentavalente3,
-                    num_vac_pentavalente3,
-                    num_vac_rotavirus,
-                    CONVERT(VARCHAR(10), fecha_vac_rotavirus1, 103) AS fecha_vac_rotavirus1,
-                    num_vac_rotavirus1,
-                    CONVERT(VARCHAR(10), fecha_vac_rotavirus2, 103) AS fecha_vac_rotavirus2,
-                    num_vac_rotavirus2,
-                    num_esq,
-                    num_esq4M,
-                    CONVERT(VARCHAR(10), fecha_Esq4m_sup_E1, 103) AS fecha_Esq4m_sup_E1,
-                    num_Esq4m_sup_E1,
-                    num_esq6M,
-                    num_esq6M_sup,
-                    CONVERT(VARCHAR(10), fecha_Esq6m_sup_E1, 103) AS fecha_Esq6m_sup_E1,
-                    num_Esq6m_sup_E1,
-                    CONVERT(VARCHAR(10), fecha_Esq6m_sup_E2, 103) AS fecha_Esq6m_sup_E2,
-                    num_Esq6m_sup_E2,
-                    num_esq6M_trat,
-                    CONVERT(VARCHAR(10), fecha_Esq6m_trat_E1, 103) AS fecha_Esq6m_trat_E1,
-                    num_Esq6m_trat_E1,
-                    CONVERT(VARCHAR(10), fecha_Esq6m_trat_E2, 103) AS fecha_Esq6m_trat_E2,
-                    num_Esq6m_trat_E2,
-                    CONVERT(VARCHAR(10), fecha_Esq6m_trat_E3, 103) AS fecha_Esq6m_trat_E3,
-                    num_Esq6m_trat_E3,
-                    num_esq6M_multi,
-                    CONVERT(VARCHAR(10), fecha_Esq6m_multi_E1, 103) AS fecha_Esq6m_multi_E1,
-                    num_Esq6m_multi_E1,
-                    CONVERT(VARCHAR(10), fecha_Esq6m_multi_E2, 103) AS fecha_Esq6m_multi_E2,
-                    num_Esq6m_multi_E2,
-                    CONVERT(VARCHAR(10), fecha_Esq6m_multi_E3, 103) AS fecha_Esq6m_multi_E3,
-                    num_Esq6m_multi_E3,
-                    CONVERT(VARCHAR(10), fecha_Esq6m_multi_E4, 103) AS fecha_Esq6m_multi_E4,
-                    num_Esq6m_multi_E4,
-                    CONVERT(VARCHAR(10), fecha_Esq6m_multi_E5, 103) AS fecha_Esq6m_multi_E5,
-                    num_Esq6m_multi_E5,
-                    CONVERT(VARCHAR(10), fecha_Esq6m_multi_E6, 103) AS fecha_Esq6m_multi_E6,
-                    num_Esq6m_multi_E6,
-                    num_dosaje_Hb,
-                    CONVERT(VARCHAR(10), fecha_Hb, 103) AS fecha_Hb,
-                    num_Hb,
-                    num_DNIemision,
-                    CONVERT(VARCHAR(10), fecha_DNIemision, 103) AS fecha_DNIemision,
-                    num_DNIemision_30d,
-                    num_DNIemision_60d,
-                    CASE mes
-                        WHEN 1 THEN 'ENERO' WHEN 2 THEN 'FEBRERO' WHEN 3 THEN 'MARZO' WHEN 4 THEN 'ABRIL'
-                        WHEN 5 THEN 'MAYO' WHEN 6 THEN 'JUNIO' WHEN 7 THEN 'JULIO' WHEN 8 THEN 'AGOSTO'
-                        WHEN 9 THEN 'SETIEMBRE' WHEN 10 THEN 'OCTUBRE' WHEN 11 THEN 'NOVIEMBRE' WHEN 12 THEN 'DICIEMBRE'
-                    END AS mes_nombre,
-                    CASE WHEN numerador = '1' THEN 'CUMPLE' ELSE 'NO CUMPLE' END AS IND,
-                    Ubigueo_Establecimiento,
-                    Provincia,
-                    Distrito,
-                    Red,
-                    MicroRed,
-                    Id_Establecimiento,
-                    Nombre_Establecimiento
-            FROM 
-                Compromiso_1.DBO.paquete_compromiso
+                SELECT 
+                    tipo_doc
+                    ,num_doc
+                    ,nombre_completo
+                    ,fecha_nac
+                    ,edad_anio
+                    ,edad_mes
+                    ,edad_dias
+                    ,sexo
+                    ,seguro
+                    ,cod_eess_padron
+                    ,nombre_eess_padron
+                    ,frecuencia
+                    ,fecha_visita
+                    ,encontrado
+                    ,dni_madre
+                    ,nombre_madre
+                    ,num_celular
+                    ,num_sup_ta
+                    ,fecha_hb
+                    ,tipo_dx_hb
+                    ,lab_hb
+                    ,val_hb
+                    ,num_hb
+                    ,fecha_Hb_12m
+                    ,tipo_dx_hb_12m
+                    ,lab_hb_12m
+                    ,val_hb_12m
+                    ,num_hb_12m
+                    ,fecha_sesion
+                    ,tipo_dx_sesion
+                    ,lab_sesion
+                    ,num_sesion
+                    ,mes_evaluacion
+                    ,ind
+                    ,zona
+                    ,provincia
+                    ,distrito
+                    ,Codigo_Red
+                    ,Red
+                    ,Codigo_MicroRed
+                    ,MicroRed
+                    ,Codigo_Unico
+                    ,Nombre_Establecimiento
+                FROM Compromiso_1.dbo.indicador_compromiso_sin_anemia
             '''
             params = []
             conditions = []
@@ -1266,11 +1086,11 @@ def obtener_seguimiento_paquete_compromiso(anio, mes_inicio, mes_fin, provincia,
             
             # Filtros de ubicación geográfica - usando LIKE para códigos de ubigeo
             if provincia and provincia != '':
-                conditions.append("LEFT(Ubigueo_Establecimiento, 4) = %s")
+                conditions.append("LEFT(ubigeo, 4) = %s")
                 params.append(provincia)
             
             if distrito and distrito != '':
-                conditions.append("Ubigueo_Establecimiento = %s")
+                conditions.append("ubigeo = %s")
                 params.append(distrito)
                 
             # Filtros de salud - usando LIKE para códigos de ubigeo    
@@ -1295,6 +1115,11 @@ def obtener_seguimiento_paquete_compromiso(anio, mes_inicio, mes_fin, provincia,
             # Agregar WHERE solo si hay condiciones
             if conditions:
                 sql_query += " WHERE " + " AND ".join(conditions)
+
+            sql_query +=  '''
+                ORDER BY
+                    fecha_nac ASC
+            '''
             
             cursor.execute(sql_query, params)
             resultados = cursor.fetchall()
@@ -1310,7 +1135,7 @@ def obtener_seguimiento_paquete_compromiso(anio, mes_inicio, mes_fin, provincia,
 
 
 ### --- 
-def obtener_seguimiento_paquete_compromiso_red(departamento, red, edad, cumple):
+def obtener_seguimiento_compromiso_indicador_red(departamento, red, edad, cumple):
     """
     Función para obtener datos del seguimiento del padrón nominal filtrados por ubicación, edad y cumplimiento.
     
@@ -1387,7 +1212,7 @@ def obtener_seguimiento_paquete_compromiso_red(departamento, red, edad, cumple):
         # Obtener los resultados
         return cursor.fetchall()
 
-def obtener_seguimiento_paquete_compromiso_microred(departamento, red, microred, edad, cumple):
+def obtener_seguimiento_compromiso_indicador_microred(departamento, red, microred, edad, cumple):
     """
     Función para obtener datos del seguimiento del padrón nominal filtrados por ubicación, edad y cumplimiento.
     
@@ -1466,7 +1291,7 @@ def obtener_seguimiento_paquete_compromiso_microred(departamento, red, microred,
         # Obtener los resultados
         return cursor.fetchall()
 
-def obtener_seguimiento_paquete_compromiso_establecimiento(departamento, establecimiento, edad, cumple):
+def obtener_seguimiento_compromiso_indicador_establecimiento(departamento, establecimiento, edad, cumple):
     """
     Función para obtener datos del seguimiento del padrón nominal filtrados por ubicación, edad y cumplimiento.
     

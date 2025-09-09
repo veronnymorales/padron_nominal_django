@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block body %}
+<!-- FILTROS -->
+<div class="card card-primary">
+    <div class="card card-header">
+        <h3 class="card-title">RESPONSABLE DEL SALUD</h3>
+    </div>
+    <!-- TABLAS DETALLE -->  
+    <div class="card card-body"> 
+    </div>
+</div>
+
+<div class="container">
+    <h1>Avance por Provincia y Distrito</h1>
+    <form id="filtroForm">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="form-group">
+                    <label class="text-primary" for="provincia">PROVINCIA :</label>
+                    <select class="form-control" name="provincia" hx-get="{% url 'p_distritos' %}" hx-trigger="change" hx-target="#p_distritos">
+                        <option value="">--- SELECCIONAR ---</option>
+                        {% for p in provincias %}
+                        <option value="{{ p.Provincia }}">{{ p.Provincia }} </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>          
+        <!--- INCLUDE DROP INCLUYENTE --->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="form-group">
+                    <div id="p_distritos">
+                    {% include 'discapacidad/partials/p_distritos.html' %}
+                </div>
+            </div>
+        </div>
+    </div> 
+        <button type="submit">Filtrar</button>
+    </form>
+    <div id="chart" style="width: 100%; height: 400px;"></div>
+</div>
+
+
+<script>
+    var myChart = echarts.init(document.getElementById('chart'));
+
+    document.getElementById('filtroForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        var formData = new FormData(this);
+        fetch('{% url "index_sello" %}?' + new URLSearchParams(formData), {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            var option = {
+                title: {
+                    text: 'Avance por Fecha'
+                },
+                tooltip: {
+                    trigger: 'axis'
+                },
+                xAxis: {
+                    type: 'category',
+                    data: data.fechas
+                },
+                yAxis: {
+                    type: 'value',
+                    name: 'Avance (%)'
+                },
+                series: [{
+                    data: data.avances,
+                    type: 'line'
+                }]
+            };
+            myChart.setOption(option);
+        });
+    });
+</script>
+
+
+{% endblock %}
