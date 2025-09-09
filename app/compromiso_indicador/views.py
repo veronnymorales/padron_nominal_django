@@ -1342,8 +1342,8 @@ def fill_worksheet(ws, results):
     ws['AJ7'] = 'Informacion Territorial del HIS MINSA'
     # CODIGO HIS
     
-    ws['S8'] = 'DX = 85018 ó 85018.01 (Valor de Hemoglobina <= 10.5 g/dl)'
-    ws['Y8'] = 'DX = 85018 ó 85018.01 (Valor de Hemoglobina <= 10.5 g/dl)'
+    ws['S8'] = 'DX = 85018 ó 85018.01 (Valor de Hemoglobina mayor o igual 10.5 g/dl)'
+    ws['Y8'] = 'DX = 85018 ó 85018.01 (Valor de Hemoglobina mayor o igual 10.5 g/dl)'
     ws['AD8'] = 'DX = C0010 + TD = D + LAB = "ALI" + LAB = "GL" (opcional el registro del GL)'
     
     ### numerador y denominador     
