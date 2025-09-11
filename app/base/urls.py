@@ -31,4 +31,6 @@ urlpatterns = [
     path('', include('paquete_compromiso.urls')), 
     ## INDICADOR COMPROMISO
     path('', include('compromiso_indicador.urls')),
+    ## INDICADOR CONSENTIMIENTO
+    path('', include('compromiso_consentimiento.urls')),
 ]

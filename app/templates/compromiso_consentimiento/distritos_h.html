@@ -60,7 +60,7 @@
             <div class="form-group">
                 <label class="text-primary" for="provincia">PROVINCIA :</label>
                 <select class="form-control form-control-sm" name="provincia_h"
-                        hx-get="{% url 'p_distritos_compromiso_indicador_h' %}"
+                        hx-get="{% url 'p_distritos_compromiso_consentimiento_h' %}"
                         hx-trigger="change"
                         hx-target="#distritos_container">
                     <option value="">--- SELECCIONAR ---</option>
@@ -74,7 +74,7 @@
         <div class="col-md-2">
             <div class="form-group">
                 <div id="distritos_container">
-                    {% include 'compromiso_indicador/partials/p_distritos.html' %}
+                    {% include 'compromiso_consentimiento/partials/p_distritos.html' %}
                 </div>
             </div>
         </div>

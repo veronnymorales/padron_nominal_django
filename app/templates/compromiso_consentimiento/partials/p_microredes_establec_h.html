@@ -1,0 +1,41 @@
+<label class="text-primary" for="p_microredes_establec_h">MICRORED : </label>
+<select
+  class="form-control form-control-sm select2"
+  id="p_microredes_establec_h"
+  name="p_microredes_establec_h"
+  hx-get="{% url 'p_establecimientos_paquete_compromiso_h' %}"
+  hx-trigger="change"
+  hx-target="#p_establecimientos_h"
+  hx-include="[name='red_h']"
+>
+  <option value="">--- SELECCIONAR ---</option>
+  {% for m in microredes %}
+  <option value="{{ m.Codigo_MicroRed }}">{{ m.MicroRed }}</option>
+  {% endfor %}
+</select>
+
+{% if is_htmx %}
+<!--- INCLUDE DROP INCLUYENTE ESTABLECIMIENTO --->
+
+<div id="p_establecimientos_h" hx-swap-oob="true">
+  {% include 'paquete_compromiso/partials/p_establecimientos_h.html' %}
+</div>
+
+<!--- FIN INCLUDE DROP INCLUYENTE ESTABLECIMIENTO --->
+{% endif %}
+
+<!-- Script para inicializar Select2 en este elemento -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js "></script>
+<script>
+  $(document).ready(function () {
+    $("#p_microredes_establec_h").select2({
+      theme: "bootstrap4",
+      width: "100%",
+      height: "31px",
+    });
+    $(".select2-container--bootstrap4 .select2-selection").css(
+      "height",
+      "31px"
+    );
+  });
+</script>

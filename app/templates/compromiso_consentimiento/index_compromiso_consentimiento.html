@@ -6,7 +6,7 @@
     <div class="col-md-12">
         <!-- Apply AdminLTE card or typical header styling -->
         <h6 class="m-1 text-dark">
-            <strong>PORCENTAJE DE NIÑOS DE 6 A 12 MESES DE EDAD SIN ANEMIA</strong>
+            <strong>PORCENTAJE DE GESTANTES CON CONSENTIMIENTO INFORMADO</strong>
         </br>
         </h6>
     </div>
@@ -87,7 +87,7 @@
                     </div>
                     <div class="card-body" style="display: block;">
                         <div class="tab-pane fade show active">
-                            {% include "compromiso_indicador/distritos_h.html" %}
+                            {% include "compromiso_consentimiento/distritos_h.html" %}
                         </div>
                     </div>
                 </div>
@@ -131,29 +131,29 @@
         <div class="row">
             <!-- Card velocimetro -->
             <div class="col-md-2" id="detalle-avance-container">
-                {% include "compromiso_indicador/components/chart/chart_avance_region.html" %}
+                {% include "compromiso_consentimiento/components/chart/chart_avance_region.html" %}
             </div>
             <!-- Card resumen -->
             <div class="col-md-2" id="detalle-avance-numden-container">
-                {% include "compromiso_indicador/components/chart/chart_avance_numden.html" %}
+                {% include "compromiso_consentimiento/components/chart/chart_avance_numden.html" %}
             </div>
             <!-- Card avance mensual -->
             <div class="col-md-8" id="detalle-avance-mensual-container">
-                {% include "compromiso_indicador/components/chart/chart_avance_mensual_region.html" %}
+                {% include "compromiso_consentimiento/components/chart/chart_avance_mensual_region.html" %}
             </div>
         </div>
         <!-- Card variables -->
         <div class="row">
             <!-- Card  variables -->
             <div class="col-md-12" id="detalle-avance-variables-container">
-                {% include "compromiso_indicador/components/chart/chart_avance_variables.html" %}
+                {% include "compromiso_consentimiento/components/chart/chart_avance_variables.html" %}
             </div>
         </div>
 
 
         <!-- Zona rows -->
         <div class="row">
-            <!-- ZONA: ranking del Indicador -->
+            <!-- ZONA: ranking del consentimiento -->
             <div class="col-md-4">
                 <div class="card">
                     <div class="card-header">
@@ -170,14 +170,14 @@
                     <div class="card-body">
                         <div class="chart-container">
                             <div id="chart_zona_ranking" style="height: 400px;">
-                                {% include 'compromiso_indicador/components/chart/chart_grafico_zona.html' %}
+                                {% include 'compromiso_consentimiento/components/chart/chart_grafico_zona.html' %}
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <!-- PROVINCIA: ranking del Indicador -->
+            <!-- PROVINCIA: ranking del consentimiento -->
             <div class="col-md-4">
                 <div class="card">
                     <div class="card-header">
@@ -194,14 +194,14 @@
                     <div class="card-body">
                         <div class="chart-container">
                             <div id="chart_provincia_ranking" style="height: 400px;">
-                                {% include 'compromiso_indicador/components/chart/chart_grafico_provincia.html' %} <!-- Chart will be rendered here -->
+                                {% include 'compromiso_consentimiento/components/chart/chart_grafico_provincia.html' %} <!-- Chart will be rendered here -->
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <!-- PROVINCIA: ranking del Indicador -->
+            <!-- PROVINCIA: ranking del consentimiento -->
             <div class="col-md-4">
                 <div class="card">
                     <div class="card-header">
@@ -218,7 +218,7 @@
                     <div class="card-body">
                         <div class="chart-container">
                             <div id="chart_distrito_ranking" style="height: 400px;">
-                                {% include 'compromiso_indicador/components/chart/chart_grafico_distrito.html' %}
+                                {% include 'compromiso_consentimiento/components/chart/chart_grafico_distrito.html' %}
                             </div>
                         </div>
                     </div>
@@ -239,7 +239,7 @@
                 </button>
             </div>
             <div class="modal-body">
-                {% include "compromiso_indicador/_matriz_cobertura.html" %}
+                {% include "compromiso_consentimiento/_matriz_cobertura.html" %}
             </div>
             <div class="modal-footer right">
                 <button type="button" class="btn btn-primary" data-dismiss="modal">Cerrar</button>
@@ -261,7 +261,7 @@
                 </button>
             </div>
             <div class="modal-body">
-                {% include "compromiso_indicador/_seguimiento_nominal_compromiso_indicador.html" %}
+                {% include "compromiso_consentimiento/_seguimiento_nominal_compromiso_consentimiento.html" %}
             </div>
             <div class="modal-footer right">
                 <button type="button" class="btn btn-primary" data-dismiss="modal">Cerrar</button>
@@ -279,10 +279,10 @@ document.addEventListener('DOMContentLoaded', function () {
     function actualizarDashboard(params) {
         const queryString = new URLSearchParams(params).toString();
         
-        // Muestra un indicador de carga general (opcional)
+        // Muestra un consentimiento de carga general (opcional)
         // document.getElementById('loading-indicator').style.display = 'block';
 
-        fetch(`{% url "index_compromiso_indicador" %}?${queryString}`, {
+        fetch(`{% url "index_compromiso_consentimiento" %}?${queryString}`, {
             headers: { "X-Requested-With": "XMLHttpRequest" },
         })
         .then(response => {
@@ -305,7 +305,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (window.renderChartMicrored) window.renderChartMicrored(data, params);
             if (window.renderChartEstablecimiento) window.renderChartEstablecimiento(data, params);
             
-            // Oculta el indicador de carga
+            // Oculta el consentimiento de carga
             // document.getElementById('loading-indicator').style.display = 'none';
         })
         .catch(error => {
